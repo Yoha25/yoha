@@ -1,0 +1,2774 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כלי מעקב הוצאות והכנסות</title>
+    <!-- Firebase Scripts -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-analytics.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+          apiKey: "AIzaSyBo4--sl5AnDxlfNIThFyR3grEwf7nnI8M",
+          authDomain: "yoha-c02a5.firebaseapp.com",
+          projectId: "yoha-c02a5",
+          storageBucket: "yoha-c02a5.firebasestorage.app",
+          messagingSenderId: "993152300027",
+          appId: "1:993152300027:web:dd926303f7616a2abb515e",
+          measurementId: "G-FHWVEDSHSS"
+        };
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-color: #4CAF50;
+            --primary-light: #7BC67E;
+            --primary-dark: #388E3C;
+            --secondary-color: #2196F3;
+            --secondary-light: #64B5F6;
+            --secondary-dark: #1976D2;
+            --warning-color: #FF9800;
+            --danger-color: #F44336;
+            --text-color: #333333;
+            --text-light: #666666;
+            --bg-color: #F5F7FA;
+            --card-bg: #FFFFFF;
+            --border-color: #E0E0E0;
+            --shadow-light: 0 2px 5px rgba(0,0,0,0.07);
+            --shadow-medium: 0 5px 15px rgba(0,0,0,0.1);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --spacing-xs: 5px;
+            --spacing-sm: 10px;
+            --spacing-md: 15px;
+            --spacing-lg: 20px;
+            --spacing-xl: 30px;
+        }
+        
+        body {
+            font-family: 'Rubik', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--spacing-xl);
+        }
+        
+        h1, h2, h3, h4 {
+            color: var(--primary-dark);
+            margin-top: 0;
+            font-weight: 500;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: var(--spacing-xl);
+            text-align: center;
+            color: var(--primary-dark);
+            position: relative;
+            padding-bottom: var(--spacing-md);
+        }
+        
+        h1:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: var(--primary-color);
+            border-radius: 3px;
+        }
+        
+        h2 {
+            font-size: 22px;
+            margin-bottom: var(--spacing-lg);
+            position: relative;
+            display: inline-block;
+            padding-bottom: var(--spacing-xs);
+        }
+        
+        h2:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background-color: var(--primary-color);
+            border-radius: 3px;
+        }
+        
+        h3 {
+            font-size: 18px;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        /* טאבים */
+        .tabs {
+            display: flex;
+            margin-bottom: var(--spacing-xl);
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 2px;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            margin-left: 2px;
+            transition: all 0.3s ease;
+            font-weight: 400;
+            color: var(--text-light);
+        }
+        
+        .tab:hover {
+            background-color: var(--primary-light);
+            color: white;
+        }
+        
+        .tab.active {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+        }
+        
+        .tab-content {
+            display: none;
+            background-color: var(--card-bg);
+            padding: var(--spacing-xl);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-light);
+            margin-bottom: var(--spacing-xl);
+            transition: all 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* טפסים */
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            font-family: 'Rubik', sans-serif;
+        }
+        
+        input:focus, select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+            outline: none;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-family: 'Rubik', sans-serif;
+        }
+        
+        button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-light);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        /* טבלאות */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: var(--spacing-lg);
+            box-shadow: var(--shadow-light);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+        
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            text-align: right;
+        }
+        
+        th {
+            background-color: var(--primary-light);
+            color: white;
+            font-weight: 500;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        tr:hover {
+            background-color: rgba(76, 175, 80, 0.05);
+        }
+        
+        .income {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .expense {
+            color: var(--danger-color);
+        }
+        
+        /* סיכומים */
+        .summary {
+            display: flex;
+            justify-content: space-between;
+            margin-top: var(--spacing-xl);
+            padding: var(--spacing-xl);
+            background-color: var(--card-bg);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-light);
+            flex-wrap: wrap;
+        }
+        
+        .summary div {
+            text-align: center;
+            margin: 5px;
+            flex: 1;
+            min-width: 150px;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-sm);
+            background-color: #f9f9f9;
+            transition: all 0.3s ease;
+        }
+        
+        .summary div:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-light);
+        }
+        
+        .summary h3 {
+            margin-top: 0;
+            color: var(--text-light);
+            font-size: 16px;
+        }
+        
+        .summary p {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 500;
+        }
+        
+        /* פריטים */
+        .recurring-item, .budget-item, .category-item {
+            border: 1px solid var(--border-color);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            background-color: var(--card-bg);
+            box-shadow: var(--shadow-light);
+            transition: all 0.3s ease;
+        }
+        
+        .recurring-item:hover, .budget-item:hover {
+            box-shadow: var(--shadow-medium);
+            transform: translateY(-3px);
+        }
+        
+        .recurring-item h3, .budget-item h3, .category-item h3 {
+            margin-top: 0;
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .recurring-item p, .budget-item p, .category-item p {
+            margin: 8px 0;
+        }
+        
+        .recurring-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .recurring-detail {
+            flex: 1;
+            min-width: 150px;
+            background-color: #f9f9f9;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-light);
+            transition: all 0.3s ease;
+        }
+        
+        .recurring-detail:hover {
+            background-color: #f5f5f5;
+            transform: translateY(-2px);
+        }
+        
+        .recurring-detail p {
+            margin: 5px 0;
+        }
+        
+        .recurring-detail p:first-child {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+        
+        .recurring-detail p:last-child {
+            font-weight: 500;
+            font-size: 16px;
+        }
+        
+        /* כפתורים */
+        .delete-btn {
+            background-color: var(--danger-color);
+            margin-right: var(--spacing-sm);
+        }
+        
+        .delete-btn:hover {
+            background-color: #D32F2F;
+        }
+        
+        .edit-btn {
+            background-color: var(--secondary-color);
+            margin-right: var(--spacing-sm);
+        }
+        
+        .edit-btn:hover {
+            background-color: var(--secondary-dark);
+        }
+        
+        /* פרוגרס בר */
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 20px;
+            margin-top: var(--spacing-sm);
+            overflow: hidden;
+            height: 16px;
+        }
+        
+        .progress-bar {
+            height: 16px;
+            text-align: center;
+            line-height: 16px;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 20px;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-under {
+            background-color: var(--primary-color);
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
+            background-size: 20px 20px;
+            animation: progressAnimation 2s linear infinite;
+        }
+        
+        .progress-warning {
+            background-color: var(--warning-color);
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
+            background-size: 20px 20px;
+            animation: progressAnimation 2s linear infinite;
+        }
+        
+        .progress-over {
+            background-color: var(--danger-color);
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
+            background-size: 20px 20px;
+            animation: progressAnimation 2s linear infinite;
+        }
+        
+        @keyframes progressAnimation {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 0; }
+        }
+        
+        /* פילטרים */
+        .filter-section {
+            margin-bottom: var(--spacing-xl);
+            padding: var(--spacing-lg);
+            background-color: var(--card-bg);
+            border-radius: var(--radius-sm);
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+            box-shadow: var(--shadow-light);
+        }
+        
+        .filter-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        /* מאזנים */
+        .balance-positive {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .balance-negative {
+            color: var(--danger-color);
+            font-weight: 500;
+        }
+        
+        /* שני טורים */
+        .two-columns {
+            display: flex;
+            gap: var(--spacing-xl);
+            flex-wrap: wrap;
+        }
+        
+        .column {
+            flex: 1;
+            min-width: 300px;
+            background-color: var(--card-bg);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-light);
+        }
+        
+        /* רספונסיביות */
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-md);
+            }
+            
+            .tab {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+            
+            .tab-content {
+                padding: var(--spacing-lg);
+            }
+            
+            .summary div {
+                flex: 100%;
+                margin-bottom: var(--spacing-sm);
+            }
+            
+            .two-columns .column {
+                flex: 100%;
+                margin-bottom: var(--spacing-lg);
+            }
+        }
+        
+        /* הדפסה */
+        @media print {
+            .no-print {
+                display: none;
+            }
+            
+            .container {
+                padding: 0;
+                box-shadow: none;
+            }
+            
+            body {
+                background-color: white;
+            }
+            
+            .tab-content {
+                box-shadow: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>כלי מעקב הוצאות והכנסות</h1>
+        
+        <div class="tabs no-print">
+            <div class="tab active" data-tab="transactions">עסקאות</div>
+            <div class="tab" data-tab="recurring">הוצאות קבועות</div>
+            <div class="tab" data-tab="budget">תקציבים</div>
+            <div class="tab" data-tab="categories">קטגוריות</div>
+            <div class="tab" data-tab="reports">דוחות וסיכומים</div>
+        </div>
+        
+        <!-- עסקאות חד פעמיות -->
+        <div class="tab-content active" id="transactions">
+            <h2>הוסף עסקה חדשה</h2>
+            <div class="form-group">
+                <label for="transaction-date">תאריך:</label>
+                <input type="date" id="transaction-date" value="">
+            </div>
+            <div class="form-group">
+                <label for="transaction-type">סוג:</label>
+                <select id="transaction-type">
+                    <option value="income">הכנסה</option>
+                    <option value="expense">הוצאה</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="transaction-category">קטגוריה:</label>
+                <select id="transaction-category">
+                    <!-- יתמלא דינמית מהקטגוריות המותאמות אישית -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="transaction-description">תיאור:</label>
+                <input type="text" id="transaction-description" placeholder="פירוט העסקה">
+            </div>
+            <div class="form-group">
+                <label for="transaction-amount">סכום (₪):</label>
+                <input type="number" id="transaction-amount" step="0.01" min="0">
+            </div>
+            
+            <div id="installments-section" style="display: none;">
+                <div class="form-group">
+                    <label for="is-installments">תשלומים:</label>
+                    <select id="is-installments">
+                        <option value="no">לא</option>
+                        <option value="yes">כן</option>
+                    </select>
+                </div>
+                <div id="installments-details" style="display: none;">
+                    <div class="form-group">
+                        <label for="total-installments">מספר תשלומים:</label>
+                        <input type="number" id="total-installments" min="2" value="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="first-payment-date">תאריך תשלום ראשון:</label>
+                        <input type="date" id="first-payment-date">
+                    </div>
+                </div>
+            </div>
+            
+            <button id="add-transaction">הוסף עסקה</button>
+            
+            <h2>עסקאות אחרונות</h2>
+            <div class="filter-section no-print">
+                <div class="filter-item">
+                    <label for="filter-month">סינון לפי חודש:</label>
+                    <select id="filter-month">
+                        <option value="all">הכל</option>
+                        <option value="1">ינואר</option>
+                        <option value="2">פברואר</option>
+                        <option value="3">מרץ</option>
+                        <option value="4">אפריל</option>
+                        <option value="5">מאי</option>
+                        <option value="6">יוני</option>
+                        <option value="7">יולי</option>
+                        <option value="8">אוגוסט</option>
+                        <option value="9">ספטמבר</option>
+                        <option value="10">אוקטובר</option>
+                        <option value="11">נובמבר</option>
+                        <option value="12">דצמבר</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label for="filter-year">סינון לפי שנה:</label>
+                    <select id="filter-year">
+                        <option value="all">הכל</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label for="filter-type">סינון לפי סוג:</label>
+                    <select id="filter-type">
+                        <option value="all">הכל</option>
+                        <option value="income">הכנסות</option>
+                        <option value="expense">הוצאות</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label for="filter-category">סינון לפי קטגוריה:</label>
+                    <select id="filter-category">
+                        <option value="all">הכל</option>
+                        <!-- יתמלא דינמית מהקטגוריות המותאמות אישית -->
+                    </select>
+                </div>
+            </div>
+            
+            <table id="transactions-table">
+                <thead>
+                    <tr>
+                        <th>תאריך</th>
+                        <th>סוג</th>
+                        <th>קטגוריה</th>
+                        <th>תיאור</th>
+                        <th>סכום (₪)</th>
+                        <th>תשלומים</th>
+                        <th class="no-print">פעולות</th>
+                    </tr>
+                </thead>
+                <tbody id="transactions-body">
+                    <!-- כאן יתווספו העסקאות -->
+                </tbody>
+            </table>
+            
+            <div class="summary">
+                <div>
+                    <h3>סה"כ הכנסות</h3>
+                    <p id="total-income">₪0.00</p>
+                </div>
+                <div>
+                    <h3>סה"כ הוצאות</h3>
+                    <p id="total-expenses">₪0.00</p>
+                </div>
+                <div>
+                    <h3>מאזן</h3>
+                    <p id="balance">₪0.00</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- הוצאות קבועות -->
+        <div class="tab-content" id="recurring">
+            <h2>הוסף הוצאה קבועה</h2>
+            <div class="form-group">
+                <label for="recurring-description">תיאור:</label>
+                <input type="text" id="recurring-description" placeholder="תיאור ההוצאה הקבועה">
+            </div>
+            <div class="form-group">
+                <label for="recurring-category">קטגוריה:</label>
+                <select id="recurring-category">
+                    <!-- יתמלא דינמית מהקטגוריות המותאמות אישית -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="recurring-amount">סכום (₪):</label>
+                <input type="number" id="recurring-amount" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+                <label for="recurring-day">יום בחודש לחיוב:</label>
+                <input type="number" id="recurring-day" min="1" max="31" value="1">
+            </div>
+            <div class="form-group">
+                <label for="recurring-start-date">תאריך התחלה:</label>
+                <input type="date" id="recurring-start-date">
+            </div>
+            <div class="form-group">
+                <label for="recurring-end-type">משך זמן:</label>
+                <select id="recurring-end-type">
+                    <option value="ongoing">ללא הגבלה</option>
+                    <option value="date">עד תאריך</option>
+                    <option value="occurrences">מספר פעמים</option>
+                </select>
+            </div>
+            <div id="recurring-end-date-group" style="display: none;">
+                <div class="form-group">
+                    <label for="recurring-end-date">תאריך סיום:</label>
+                    <input type="date" id="recurring-end-date">
+                </div>
+            </div>
+            <div id="recurring-occurrences-group" style="display: none;">
+                <div class="form-group">
+                    <label for="recurring-occurrences">מספר תשלומים:</label>
+                    <input type="number" id="recurring-occurrences" min="1" value="12">
+                </div>
+            </div>
+            
+            <button id="add-recurring">הוסף הוצאה קבועה</button>
+            
+            <h2>הוצאות קבועות</h2>
+            <div id="recurring-items">
+                <!-- כאן יתווספו ההוצאות הקבועות -->
+            </div>
+        </div>
+        
+        <!-- ניהול תקציבים -->
+        <div class="tab-content" id="budget">
+            <h2>ניהול תקציבים</h2>
+            
+            <div class="two-columns">
+                <div class="column">
+                    <h3>תקציב חודשי כולל</h3>
+                    <div class="form-group">
+                        <label for="total-budget-amount">סכום תקציב חודשי כולל (₪):</label>
+                        <input type="number" id="total-budget-amount" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="total-budget-description">הערות (אופציונלי):</label>
+                        <input type="text" id="total-budget-description" placeholder="הערות לגבי התקציב הכולל">
+                    </div>
+                    <button id="add-total-budget">הגדר תקציב כולל</button>
+                    
+                    <h3 style="margin-top: 30px;">תקציב לפי קטגוריה</h3>
+                    <div class="form-group">
+                        <label for="budget-category">קטגוריה:</label>
+                        <select id="budget-category">
+                            <!-- יתמלא דינמית מהקטגוריות המותאמות אישית -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="budget-amount">סכום תקציב חודשי (₪):</label>
+                        <input type="number" id="budget-amount" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="budget-description">הערות (אופציונלי):</label>
+                        <input type="text" id="budget-description" placeholder="הערות לגבי התקציב">
+                    </div>
+                    <button id="add-budget">הוסף תקציב</button>
+                </div>
+                
+                <div class="column">
+                    <h3>תקציבים פעילים</h3>
+                    <div class="filter-section no-print">
+                        <div class="filter-item">
+                            <label for="budget-view-month">חודש:</label>
+                            <select id="budget-view-month">
+                                <option value="1">ינואר</option>
+                                <option value="2">פברואר</option>
+                                <option value="3">מרץ</option>
+                                <option value="4">אפריל</option>
+                                <option value="5">מאי</option>
+                                <option value="6">יוני</option>
+                                <option value="7">יולי</option>
+                                <option value="8">אוגוסט</option>
+                                <option value="9">ספטמבר</option>
+                                <option value="10">אוקטובר</option>
+                                <option value="11">נובמבר</option>
+                                <option value="12">דצמבר</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label for="budget-view-year">שנה:</label>
+                            <select id="budget-view-year">
+                                <!-- יתמלא דינמית -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="total-budget-container">
+                        <!-- כאן יוצג התקציב הכולל -->
+                    </div>
+                    
+                    <h3>תקציבים לפי קטגוריות</h3>
+                    <div id="budgets-container">
+                        <!-- כאן יוצגו התקציבים -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ניהול קטגוריות -->
+        <div class="tab-content" id="categories">
+            <h2>ניהול קטגוריות</h2>
+            
+            <div class="two-columns">
+                <div class="column">
+                    <h3>הוסף קטגוריה חדשה</h3>
+                    <div class="form-group">
+                        <label for="new-category-name">שם הקטגוריה:</label>
+                        <input type="text" id="new-category-name" placeholder="שם הקטגוריה">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-category-type">סוג הקטגוריה:</label>
+                        <select id="new-category-type">
+                            <option value="both">הכנסות והוצאות</option>
+                            <option value="income">הכנסות בלבד</option>
+                            <option value="expense">הוצאות בלבד</option>
+                        </select>
+                    </div>
+                    <button id="add-category">הוסף קטגוריה</button>
+                </div>
+                
+                <div class="column">
+                    <h3>קטגוריות קיימות</h3>
+                    <div class="filter-section no-print">
+                        <div class="filter-item">
+                            <label for="category-filter">סינון:</label>
+                            <select id="category-filter">
+                                <option value="all">כל הקטגוריות</option>
+                                <option value="income">קטגוריות הכנסה</option>
+                                <option value="expense">קטגוריות הוצאה</option>
+                                <option value="both">קטגוריות משותפות</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="categories-container">
+                        <!-- כאן יוצגו הקטגוריות -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- דוחות וסיכומים -->
+        <div class="tab-content" id="reports">
+            <h2>דוחות וסיכומים</h2>
+            
+            <div class="filter-section no-print">
+                <div class="filter-item">
+                    <label for="report-month">חודש:</label>
+                    <select id="report-month">
+                        <option value="all">הכל</option>
+                        <option value="1">ינואר</option>
+                        <option value="2">פברואר</option>
+                        <option value="3">מרץ</option>
+                        <option value="4">אפריל</option>
+                        <option value="5">מאי</option>
+                        <option value="6">יוני</option>
+                        <option value="7">יולי</option>
+                        <option value="8">אוגוסט</option>
+                        <option value="9">ספטמבר</option>
+                        <option value="10">אוקטובר</option>
+                        <option value="11">נובמבר</option>
+                        <option value="12">דצמבר</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label for="report-year">שנה:</label>
+                    <select id="report-year">
+                        <!-- יתמלא דינמית -->
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <button id="generate-report">הפק דוח</button>
+                    <button id="print-report" style="margin-right: 10px;">הדפס דוח</button>
+                </div>
+            </div>
+            
+            <div id="report-summary" class="summary">
+                <div>
+                    <h3>סה"כ הכנסות</h3>
+                    <p id="report-income">₪0.00</p>
+                </div>
+                <div>
+                    <h3>סה"כ הוצאות</h3>
+                    <p id="report-expenses">₪0.00</p>
+                </div>
+                <div>
+                    <h3>מאזן</h3>
+                    <p id="report-balance">₪0.00</p>
+                </div>
+            </div>
+            
+            <h3>חלוקה לפי קטגוריות - הוצאות</h3>
+            <table id="category-expenses">
+                <thead>
+                    <tr>
+                        <th>קטגוריה</th>
+                        <th>סכום (₪)</th>
+                        <th>אחוז מסך ההוצאות</th>
+                    </tr>
+                </thead>
+                <tbody id="category-expenses-body">
+                    <!-- יתמלא דינמית -->
+                </tbody>
+            </table>
+            
+            <h3>חלוקה לפי קטגוריות - הכנסות</h3>
+            <table id="category-income">
+                <thead>
+                    <tr>
+                        <th>קטגוריה</th>
+                        <th>סכום (₪)</th>
+                        <th>אחוז מסך ההכנסות</th>
+                    </tr>
+                </thead>
+                <tbody id="category-income-body">
+                    <!-- יתמלא דינמית -->
+                </tbody>
+            </table>
+            
+            <h3>תשלומים עתידיים</h3>
+            <table id="future-payments">
+                <thead>
+                    <tr>
+                        <th>תאריך</th>
+                        <th>תיאור</th>
+                        <th>קטגוריה</th>
+                        <th>סכום (₪)</th>
+                        <th>סוג</th>
+                    </tr>
+                </thead>
+                <tbody id="future-payments-body">
+                    <!-- יתמלא דינמית -->
+                </tbody>
+            </table>
+            
+            <div class="filter-section no-print" style="margin-top: 30px;">
+                <h3>ניהול נתונים</h3>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <button id="export-data" class="edit-btn">ייצוא נתונים</button>
+                    <button id="import-data" class="edit-btn">ייבוא נתונים</button>
+                    <button id="clear-data" class="delete-btn">מחיקת כל הנתונים</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // מערך לאחסון עסקאות
+        let transactions = [];
+        
+        // מערך לאחסון הוצאות קבועות
+        let recurringExpenses = [];
+        
+        // מערך לאחסון קטגוריות מותאמות אישית
+        let categories = [
+            { id: 1, name: "שכר", type: "income" },
+            { id: 2, name: "מזון", type: "expense" },
+            { id: 3, name: "תחבורה", type: "expense" },
+            { id: 4, name: "דיור", type: "expense" },
+            { id: 5, name: "בילויים", type: "expense" },
+            { id: 6, name: "חשבונות", type: "expense" },
+            { id: 7, name: "ביגוד", type: "expense" },
+            { id: 8, name: "בריאות", type: "expense" },
+            { id: 9, name: "חינוך", type: "expense" },
+            { id: 10, name: "אחר", type: "both" }
+        ];
+        
+        // מערך לאחסון תקציבים
+        let budgets = [];
+        
+        // אובייקט לאחסון תקציב כולל
+        let totalBudget = {
+            amount: 0,
+            description: ''
+        };
+        
+        // הגדרת כל הפונקציות במרחב השמות הגלובלי
+        function addTransaction() {
+            const date = document.getElementById('transaction-date').value;
+            const type = document.getElementById('transaction-type').value;
+            const categoryId = document.getElementById('transaction-category').value;
+            const description = document.getElementById('transaction-description').value;
+            const amount = parseFloat(document.getElementById('transaction-amount').value);
+            
+            if (!date || !description || isNaN(amount) || amount <= 0 || !categoryId) {
+                alert('נא למלא את כל השדות בצורה תקינה');
+                return;
+            }
+            
+            const isInstallments = document.getElementById('is-installments').value === 'yes' && type === 'expense';
+            let installmentsInfo = null;
+            
+            if (isInstallments) {
+                const totalInstallments = parseInt(document.getElementById('total-installments').value);
+                const firstPaymentDate = document.getElementById('first-payment-date').value;
+                
+                if (isNaN(totalInstallments) || totalInstallments < 2 || !firstPaymentDate) {
+                    alert('נא להזין פרטי תשלומים תקינים');
+                    return;
+                }
+                
+                installmentsInfo = {
+                    total: totalInstallments,
+                    current: 1,
+                    firstDate: firstPaymentDate,
+                    amountPerInstallment: (amount / totalInstallments).toFixed(2)
+                };
+                
+                // הוספת כל התשלומים
+                addInstallmentTransactions(installmentsInfo, date, type, categoryId, description, amount);
+            } else {
+                // הוספת עסקה רגילה
+                const transaction = {
+                    id: Date.now(),
+                    date: date,
+                    type: type,
+                    categoryId: categoryId,
+                    description: description,
+                    amount: amount,
+                    installments: null
+                };
+                
+                transactions.push(transaction);
+                saveData();
+                renderTransactions();
+                renderBudgets(); // עדכון תצוגת התקציבים
+            }
+            
+            // איפוס השדות
+            document.getElementById('transaction-description').value = '';
+            document.getElementById('transaction-amount').value = '';
+            
+            // שליחת אירוע לאנליטיקס של Firebase
+            try {
+                if (typeof analytics !== 'undefined') {
+                    analytics.logEvent('transaction_added', {
+                        transaction_type: type,
+                        transaction_amount: amount,
+                        is_installments: isInstallments
+                    });
+                }
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+        }
+        
+        function addInstallmentTransactions(installmentsInfo, originalDate, type, categoryId, description, totalAmount) {
+            const amountPerInstallment = parseFloat(installmentsInfo.amountPerInstallment);
+            const baseId = Date.now();
+            
+            for (let i = 0; i < installmentsInfo.total; i++) {
+                // חישוב תאריך התשלום
+                const paymentDate = new Date(installmentsInfo.firstDate);
+                paymentDate.setMonth(paymentDate.getMonth() + i);
+                
+                const formattedDate = paymentDate.toISOString().split('T')[0];
+                
+                const transaction = {
+                    id: baseId + i,
+                    date: formattedDate,
+                    type: type,
+                    categoryId: categoryId,
+                    description: description,
+                    amount: amountPerInstallment,
+                    installments: {
+                        total: installmentsInfo.total,
+                        current: i + 1,
+                        totalAmount: totalAmount
+                    }
+                };
+                
+                transactions.push(transaction);
+            }
+            
+            saveData();
+            renderTransactions();
+            renderBudgets(); // עדכון תצוגת התקציבים
+            
+            // שליחת אירוע לאנליטיקס של Firebase
+            try {
+                if (typeof analytics !== 'undefined') {
+                    analytics.logEvent('installment_transaction_added', {
+                        total_installments: installmentsInfo.total,
+                        total_amount: totalAmount
+                    });
+                }
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+        }
+        
+        function addRecurringExpense() {
+            const description = document.getElementById('recurring-description').value;
+            const categoryId = document.getElementById('recurring-category').value;
+            const amount = parseFloat(document.getElementById('recurring-amount').value);
+            const dayOfMonth = parseInt(document.getElementById('recurring-day').value);
+            const startDate = document.getElementById('recurring-start-date').value;
+            const endType = document.getElementById('recurring-end-type').value;
+            
+            if (!description || isNaN(amount) || amount <= 0 || !startDate || isNaN(dayOfMonth) || dayOfMonth < 1 || dayOfMonth > 31 || !categoryId) {
+                alert('נא למלא את כל השדות בצורה תקינה');
+                return;
+            }
+            
+            let endDate = null;
+            let occurrences = null;
+            
+            if (endType === 'date') {
+                endDate = document.getElementById('recurring-end-date').value;
+                if (!endDate) {
+                    alert('נא להזין תאריך סיום');
+                    return;
+                }
+            } else if (endType === 'occurrences') {
+                occurrences = parseInt(document.getElementById('recurring-occurrences').value);
+                if (isNaN(occurrences) || occurrences < 1) {
+                    alert('נא להזין מספר תשלומים תקין');
+                    return;
+                }
+            }
+            
+            const recurringExpense = {
+                id: Date.now(),
+                description: description,
+                categoryId: categoryId,
+                amount: amount,
+                dayOfMonth: dayOfMonth,
+                startDate: startDate,
+                endType: endType,
+                endDate: endDate,
+                occurrences: occurrences,
+                completedOccurrences: 0
+            };
+            
+            recurringExpenses.push(recurringExpense);
+            saveData();
+            generateRecurringTransactions();
+            renderRecurringExpenses();
+            
+            // איפוס השדות
+            document.getElementById('recurring-description').value = '';
+            document.getElementById('recurring-amount').value = '';
+            
+            // שליחת אירוע לאנליטיקס של Firebase
+            try {
+                if (typeof analytics !== 'undefined') {
+                    analytics.logEvent('recurring_expense_added', {
+                        amount: amount,
+                        end_type: endType
+                    });
+                }
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+        }
+        
+        function generateRecurringTransactions() {
+            // מחיקת עסקאות קבועות עתידיות
+            transactions = transactions.filter(transaction => !transaction.isRecurring || new Date(transaction.date) <= new Date());
+            
+            const today = new Date();
+            
+            // בדיקת הוצאות קבועות ויצירת עסקאות עבורן
+            recurringExpenses.forEach(expense => {
+                const startDate = new Date(expense.startDate);
+                const currentMonth = today.getMonth();
+                const currentYear = today.getFullYear();
+                
+                // יצירת עסקאות עד 6 חודשים קדימה
+                for (let i = 0; i < 6; i++) {
+                    const targetMonth = (currentMonth + i) % 12;
+                    const targetYear = currentYear + Math.floor((currentMonth + i) / 12);
+                    
+                    // יצירת תאריך היעד - חישוב התאריך הקרוב ביותר לפי היום בחודש
+                    const targetDate = new Date(targetYear, targetMonth, expense.dayOfMonth);
+                    
+                    // בדיקה האם התאריך עדיין רלוונטי
+                    if (expense.endType === 'date' && new Date(expense.endDate) < targetDate) {
+                        continue;
+                    }
+                    
+                    if (expense.endType === 'occurrences' && expense.completedOccurrences >= expense.occurrences) {
+                        continue;
+                    }
+                    
+                    // בדיקה האם יש כבר עסקה עבור חודש זה
+                    const existingTransaction = transactions.find(t => 
+                        t.isRecurring && 
+                        t.recurringId === expense.id && 
+                        new Date(t.date).getMonth() === targetMonth && 
+                        new Date(t.date).getFullYear() === targetYear
+                    );
+                    
+                    if (!existingTransaction && targetDate > startDate) {
+                        // יצירת עסקה חדשה
+                        const transaction = {
+                            id: Date.now() + i,
+                            date: targetDate.toISOString().split('T')[0],
+                            type: 'expense',
+                            categoryId: expense.categoryId,
+                            description: expense.description,
+                            amount: expense.amount,
+                            installments: null,
+                            isRecurring: true,
+                            recurringId: expense.id
+                        };
+                        
+                        transactions.push(transaction);
+                    }
+                }
+            });
+            
+            saveData();
+            renderTransactions();
+            renderBudgets(); // עדכון תצוגת התקציבים
+        }
+        
+        function deleteTransaction(id) {
+            if (confirm('האם אתה בטוח שברצונך למחוק עסקה זו?')) {
+                transactions = transactions.filter(transaction => transaction.id !== id);
+                saveData();
+                renderTransactions();
+                renderBudgets();
+                
+                // שליחת אירוע לאנליטיקס של Firebase
+                try {
+                    if (typeof analytics !== 'undefined') {
+                        analytics.logEvent('transaction_deleted');
+                    }
+                } catch (error) {
+                    console.error('Analytics error:', error);
+                }
+            }
+        }
+        
+        function deleteRecurringExpense(id) {
+            if (confirm('האם אתה בטוח שברצונך למחוק הוצאה קבועה זו? פעולה זו תמחק גם את כל העסקאות העתידיות הקשורות להוצאה זו.')) {
+                recurringExpenses = recurringExpenses.filter(expense => expense.id !== id);
+                
+                // מחיקת עסקאות עתידיות הקשורות להוצאה זו
+                transactions = transactions.filter(transaction => 
+                    !transaction.isRecurring || 
+                    transaction.recurringId !== id || 
+                    new Date(transaction.date) <= new Date()
+                );
+                
+                saveData();
+                renderRecurringExpenses();
+                renderTransactions();
+                renderBudgets();
+                
+                // שליחת אירוע לאנליטיקס של Firebase
+                try {
+                    if (typeof analytics !== 'undefined') {
+                        analytics.logEvent('recurring_expense_deleted');
+                    }
+                } catch (error) {
+                    console.error('Analytics error:', error);
+                }
+            }
+        }
+        
+        function filterTransactions() {
+            const filterMonth = document.getElementById('filter-month').value;
+            const filterYear = document.getElementById('filter-year').value;
+            const filterType = document.getElementById('filter-type').value;
+            const filterCategory = document.getElementById('filter-category').value;
+            
+            renderTransactions(filterMonth, filterYear, filterType, filterCategory);
+            
+            // שליחת אירוע לאנליטיקס של Firebase
+            try {
+                if (typeof analytics !== 'undefined') {
+                    analytics.logEvent('transaction_filter_applied', {
+                        month: filterMonth,
+                        year: filterYear,
+                        type: filterType,
+                        category: filterCategory
+                    });
+                }
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+        }
+        
+        function renderTransactions(filterMonth = 'all', filterYear = 'all', filterType = 'all', filterCategory = 'all') {
+            const tableBody = document.getElementById('transactions-body');
+            tableBody.innerHTML = '';
+            
+            // סינון עסקאות
+            let filteredTransactions = [...transactions];
+            
+            if (filterMonth !== 'all') {
+                filteredTransactions = filteredTransactions.filter(transaction => {
+                    const transactionDate = new Date(transaction.date);
+                    return transactionDate.getMonth() + 1 === parseInt(filterMonth);
+                });
+            }
+            
+            if (filterYear !== 'all') {
+                filteredTransactions = filteredTransactions.filter(transaction => {
+                    const transactionDate = new Date(transaction.date);
+                    return transactionDate.getFullYear() === parseInt(filterYear);
+                });
+            }
+            
+            if (filterType !== 'all') {
+                filteredTransactions = filteredTransactions.filter(transaction => transaction.type === filterType);
+            }
+            
+            if (filterCategory !== 'all') {
+                filteredTransactions = filteredTransactions.filter(transaction => transaction.categoryId === filterCategory);
+            }
+            
+            // מיון עסקאות לפי תאריך (מהחדש לישן)
+            filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // חישוב סיכומים
+            let totalIncome = 0;
+            let totalExpenses = 0;
+            
+            // הצגת העסקאות
+            filteredTransactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                
+                // עיצוב לפי סוג העסקה
+                if (transaction.type === 'income') {
+                    row.classList.add('income');
+                    totalIncome += transaction.amount;
+                } else {
+                    row.classList.add('expense');
+                    totalExpenses += transaction.amount;
+                }
+                
+                // פורמט התאריך
+                const date = new Date(transaction.date);
+                const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+                
+                // מציאת שם הקטגוריה
+                const category = categories.find(c => c.id === parseInt(transaction.categoryId)) || { name: 'לא מוגדרת' };
+                
+                // יצירת התא עם פרטי התשלומים
+                let installmentsText = '';
+                if (transaction.installments) {
+                    installmentsText = `תשלום ${transaction.installments.current}/${transaction.installments.total} מתוך ${transaction.installments.totalAmount.toFixed(2)} ₪`;
+                } else if (transaction.isRecurring) {
+                    installmentsText = 'הוצאה קבועה';
+                } else {
+                    installmentsText = '-';
+                }
+                
+                row.innerHTML = `
+                    <td>${formattedDate}</td>
+                    <td>${transaction.type === 'income' ? 'הכנסה' : 'הוצאה'}</td>
+                    <td>${category.name}</td>
+                    <td>${transaction.description}</td>
+                    <td>${transaction.amount.toFixed(2)} ₪</td>
+                    <td>${installmentsText}</td>
+                    <td class="no-print">
+                        <button class="delete-btn" onclick="deleteTransaction(${transaction.id})">מחק</button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // עדכון סיכומים
+            document.getElementById('total-income').textContent = `${totalIncome.toFixed(2)} ₪`;
+            document.getElementById('total-expenses').textContent = `${totalExpenses.toFixed(2)} ₪`;
+            
+            const balance = totalIncome - totalExpenses;
+            const balanceElement = document.getElementById('balance');
+            balanceElement.textContent = `${balance.toFixed(2)} ₪`;
+            
+            if (balance >= 0) {
+                balanceElement.className = 'balance-positive';
+            } else {
+                balanceElement.className = 'balance-negative';
+            }
+        }
+        
+        function renderRecurringExpenses() {
+            const container = document.getElementById('recurring-items');
+            container.innerHTML = '';
+            
+            recurringExpenses.forEach(expense => {
+                const item = document.createElement('div');
+                item.className = 'recurring-item';
+                
+                // מציאת שם הקטגוריה
+                const category = categories.find(c => c.id === parseInt(expense.categoryId)) || { name: 'לא מוגדרת' };
+                
+                // פורמט תאריך התחלה
+                const startDate = new Date(expense.startDate);
+                const formattedStartDate = `${startDate.getDate().toString().padStart(2, '0')}/${(startDate.getMonth() + 1).toString().padStart(2, '0')}/${startDate.getFullYear()}`;
+                
+                // פורמט מידע על סיום
+                let endInfo = 'ללא הגבלה';
+                if (expense.endType === 'date') {
+                    const endDate = new Date(expense.endDate);
+                    endInfo = `עד ${endDate.getDate().toString().padStart(2, '0')}/${(endDate.getMonth() + 1).toString().padStart(2, '0')}/${endDate.getFullYear()}`;
+                } else if (expense.endType === 'occurrences') {
+                    endInfo = `${expense.completedOccurrences}/${expense.occurrences} תשלומים`;
+                }
+                
+                item.innerHTML = `
+                    <h3>${expense.description}</h3>
+                    <div class="recurring-details">
+                        <div class="recurring-detail">
+                            <p><strong>קטגוריה</strong></p>
+                            <p>${category.name}</p>
+                        </div>
+                        <div class="recurring-detail">
+                            <p><strong>סכום</strong></p>
+                            <p>${expense.amount.toFixed(2)} ₪</p>
+                        </div>
+                        <div class="recurring-detail">
+                            <p><strong>יום בחודש</strong></p>
+                            <p>${expense.dayOfMonth}</p>
+                        </div>
+                    </div>
+                    <div class="recurring-details">
+                        <div class="recurring-detail">
+                            <p><strong>תאריך התחלה</strong></p>
+                            <p>${formattedStartDate}</p>
+                        </div>
+                        <div class="recurring-detail">
+                            <p><strong>סיום</strong></p>
+                            <p>${endInfo}</p>
+                        </div>
+                    </div>
+                    <button class="delete-btn" onclick="deleteRecurringExpense(${expense.id})">מחק</button>
+                `;
+                
+                container.appendChild(item);
+            });
+            
+            // הוספת הודעה אם אין הוצאות קבועות
+            if (recurringExpenses.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.innerHTML = '<p>אין הוצאות קבועות כרגע. הוסף הוצאה קבועה חדשה כדי להתחיל.</p>';
+                container.appendChild(emptyMessage);
+            }
+        }
+        
+        function addCategory() {
+            const categoryName = document.getElementById('new-category-name').value.trim();
+            const categoryType = document.getElementById('new-category-type').value;
+            
+            if (!categoryName) {
+                alert('נא להזין שם קטגוריה');
+                return;
+            }
+            
+            // בדיקה האם קטגוריה עם שם זהה כבר קיימת
+            const categoryExists = categories.some(cat => cat.name.toLowerCase() === categoryName.toLowerCase());
+            
+            if (categoryExists) {
+                alert('קטגוריה בשם זה כבר קיימת');
+                return;
+            }
+            
+            // יצירת קטגוריה חדשה
+            const newCategory = {
+                id: Date.now(),
+                name: categoryName,
+                type: categoryType
+            };
+            
+            categories.push(newCategory);
+            saveData();
+            renderCategories();
+            populateCategoryDropdowns();
+            
+            // איפוס שדה הקלט
+            document.getElementById('new-category-name').value = '';
+            
+            // עדכון התצוגה בכל הלשוניות
+            renderTransactions();
+            renderRecurringExpenses();
+            renderBudgets();
+            
+            // שליחת אירוע לאנליטיקס של Firebase
+            try {
+                if (typeof analytics !== 'undefined') {
+analytics.logEvent('category_added', {
+                        category_type: categoryType,
+                        category_name: categoryName
+                    });
+                }
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+        }
+        
+        function deleteCategory(categoryId) {
+            // המרת ה-ID למספר כדי להבטיח השוואה נכונה
+            const catId = parseInt(categoryId);
+            
+            // בדיקה האם הקטגוריה בשימוש בעסקאות
+            const isUsedInTransactions = transactions.some(t => parseInt(t.categoryId) === catId);
+            // בדיקה האם הקטגוריה בשימוש בהוצאות קבועות
+            const isUsedInRecurring = recurringExpenses.some(r => parseInt(r.categoryId) === catId);
+            // בדיקה האם הקטגוריה בשימוש בתקציבים
+            const isUsedInBudgets = budgets.some(b => parseInt(b.categoryId) === catId);
+            
+            if (isUsedInTransactions || isUsedInRecurring || isUsedInBudgets) {
+                alert('לא ניתן למחוק קטגוריה שנמצאת בשימוש בעסקאות, הוצאות קבועות או תקציבים');
+                return;
+            }
+            
+            if (confirm('האם אתה בטוח שברצונך למחוק קטגוריה זו?')) {
+                categories = categories.filter(c => c.id !== catId);
+                saveData();
+                renderCategories();
+                populateCategoryDropdowns();
+                
+                // עדכון התצוגה בכל הלשוניות
+                renderTransactions();
+                renderRecurringExpenses();
+                renderBudgets();
+                
+                // שליחת אירוע לאנליטיקס של Firebase
+                try {
+                    if (typeof analytics !== 'undefined') {
+                        analytics.logEvent('category_deleted');
+                    }
+                } catch (error) {
+                    console.error('Analytics error:', error);
+                }
+            }
+        }
+        
+        function editCategory(categoryId) {
+            const category = categories.find(c => c.id === parseInt(categoryId));
+            
+            if (!category) {
+                alert('קטגוריה לא נמצאה');
+                return;
+            }
+            
+            const newName = prompt('הזן שם חדש לקטגוריה:', category.name);
+            
+            if (newName && newName.trim() !== '') {
+                // בדיקה האם השם החדש כבר קיים
+                const nameExists = categories.some(c => c.id !== parseInt(categoryId) && c.name.toLowerCase() === newName.toLowerCase());
+                
+                if (nameExists) {
+                    alert('קטגוריה בשם זה כבר קיימת');
+                    return;
+                }
+                
+                category.name = newName.trim();
+                saveData();
+                renderCategories();
+                populateCategoryDropdowns();
+                
+                // עדכון התצוגה בכל הלשוניות
+                renderTransactions();
+                renderRecurringExpenses();
+                renderBudgets();
+                
+                // שליחת אירוע לאנליטיקס של Firebase
+                try {
+                    if (typeof analytics !== 'undefined') {
+                        analytics.logEvent('category_edited');
+                    }
+                } catch (error) {
+                    console.error('Analytics error:', error);
+                }
+            }
+        }
+        
+        function renderCategories() {
+            const container = document.getElementById('categories-container');
+            container.innerHTML = '';
+            
+            // סינון לפי בחירת המשתמש
+            const filterType = document.getElementById('category-filter').value;
+            let filteredCategories = categories;
+            
+            if (filterType !== 'all') {
+                filteredCategories = categories.filter(c => c.type === filterType);
+            }
+            
+            // מיון לפי שם
+            filteredCategories.sort((a, b) => a.name.localeCompare(b.name));
+            
+            filteredCategories.forEach(category => {
+                const categoryElement = document.createElement('div');
+                categoryElement.className = 'category-item';
+                
+                let typeText = '';
+                if (category.type === 'income') {
+                    typeText = 'הכנסות בלבד';
+                } else if (category.type === 'expense') {
+                    typeText = 'הוצאות בלבד';
+                } else {
+                    typeText = 'הכנסות והוצאות';
+                }
+                
+                categoryElement.innerHTML = `
+                    <h3>${category.name}</h3>
+                    <p><strong>סוג:</strong> ${typeText}</p>
+                    <div>
+                        <button class="edit-btn" onclick="editCategory(${category.id})">ערוך</button>
+                        <button class="delete-btn" onclick="deleteCategory(${category.id})">מחק</button>
+                    </div>
+                `;
+                
+                container.appendChild(categoryElement);
+            });
+        }
+        
+        function filterCategories() {
+            renderCategories();
+            
+            // שליחת אירוע לאנליטיקס של Firebase
+            try {
+                if (typeof analytics !== 'undefined') {
+                    const filterType = document.getElementById('category-filter').value;
+                    analytics.logEvent('category_filter_applied', {
+                        filter_type: filterType
+                    });
+                }
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+        }
+        
+        function populateCategoryDropdowns() {
+            // רשימת הסלקטורים שצריך למלא
+            const selectors = [
+                { id: 'transaction-category', type: 'dynamic' },
+                { id: 'recurring-category', type: 'expense' },
+                { id: 'filter-category', type: 'all' },
+                { id: 'budget-category', type: 'expense' }
+            ];
+            
+            selectors.forEach(selector => {
+                const element = document.getElementById(selector.id);
+                if (!element) return; // דילוג אם האלמנט לא קיים בדף
+                
+                element.innerHTML = '';
+                
+                // אם זה סלקט של פילטר, נוסיף אופציה של "הכל"
+                if (selector.type === 'all') {
+                    const allOption = document.createElement('option');
+                    allOption.value = 'all';
+                    allOption.textContent = 'הכל';
+                    element.appendChild(allOption);
+                }
+                
+                // סינון הקטגוריות הרלוונטיות בהתאם לסוג הסלקטור
+                let relevantCategories = categories;
+                
+                if (selector.type === 'income') {
+                    relevantCategories = categories.filter(c => c.type === 'income' || c.type === 'both');
+                } else if (selector.type === 'expense') {
+                    relevantCategories = categories.filter(c => c.type === 'expense' || c.type === 'both');
+                } else if (selector.type === 'dynamic') {
+                    // בסלקטור דינמי, ההתנהגות תלויה בסוג העסקה (הכנסה/הוצאה)
+                    const transactionType = document.getElementById('transaction-type').value;
+                    if (transactionType === 'income') {
+                        relevantCategories = categories.filter(c => c.type === 'income' || c.type === 'both');
+                    } else {
+                        relevantCategories = categories.filter(c => c.type === 'expense' || c.type === 'both');
+                    }
+                }
+                
+                // מיון לפי שם
+                relevantCategories.sort((a, b) => a.name.localeCompare(b.name));
+                
+                // הוספת האפשרויות לסלקטור
+                relevantCategories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = category.name;
+                    element.appendChild(option);
+                });
+            });
+        }
+        
+        function addBudget() {
+            const categoryId = document.getElementById('budget-category').value;
+            const amount = parseFloat(document.getElementById('budget-amount').value);
+            const description = document.getElementById('budget-description').value.trim();
+            
+            if (!categoryId || isNaN(amount) || amount <= 0) {
+                alert('נא למלא את כל השדות בצורה תקינה');
+                return;
+            }
+            
+            // בדיקה האם כבר קיים תקציב לקטגוריה זו
+            const budgetExists = budgets.some(b => parseInt(b.categoryId) === parseInt(categoryId));
+            
+            if (budgetExists) {
+                if (!confirm('כבר קיים תקציב לקטגוריה זו. האם ברצונך להחליף אותו?')) {
+                    return;
+                }
+                
+                // עדכון התקציב הקיים
+                const existingBudget = budgets.find(b => parseInt(b.categoryId) === parseInt(categoryId));
+                existingBudget.amount = amount;
+                existingBudget.description = description;
+            } else {
+                // יצירת תקציב חדש
+                const newBudget = {
+                    id: Date.now(),
+                    categoryId: categoryId,
+                    amount: amount,
+                    description: description
+                };
+                
+                budgets.push(newBudget);
+            }
+            
+            saveData();
+            renderBudgets();
+            
+            // איפוס השדות
+            document.getElementById('budget-amount').value = '';
+            document.getElementById('budget-description').value = '';
+            
+            // שליחת אירוע לאנליטיקס של Firebase
+            try {
+                if (typeof analytics !== 'undefined') {
+                    analytics.logEvent('budget_added', {
+                        amount: amount,
+                        category_id: categoryId
+                    });
+                }
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+        }
+        
+        // הגדרת תקציב כולל
+        function addTotalBudget() {
+            const amount = parseFloat(document.getElementById('total-budget-amount').value);
+            const description = document.getElementById('total-budget-description').value.trim();
+            
+            if (isNaN(amount) || amount <= 0) {
+                alert('נא להזין סכום תקציב תקין');
+                return;
+            }
+            
+            totalBudget.amount = amount;
+            totalBudget.description = description;
+            
+            saveData();
+            renderBudgets();
+            
+            // איפוס השדות
+            document.getElementById('total-budget-amount').value = '';
+            document.getElementById('total-budget-description').value = '';
+            
+            // שליחת אירוע לאנליטיקס של Firebase
+            try {
+                if (typeof analytics !== 'undefined') {
+                    analytics.logEvent('total_budget_set', {
+                        amount: amount
+                    });
+                }
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+        }
+        
+        // איפוס תקציב כולל
+        function resetTotalBudget() {
+            if (confirm('האם אתה בטוח שברצונך לאפס את התקציב הכולל?')) {
+                totalBudget = {
+                    amount: 0,
+                    description: ''
+                };
+                
+                saveData();
+                renderBudgets();
+                
+                // שליחת אירוע לאנליטיקס של Firebase
+                try {
+                    if (typeof analytics !== 'undefined') {
+                        analytics.logEvent('total_budget_reset');
+                    }
+                } catch (error) {
+                    console.error('Analytics error:', error);
+                }
+            }
+        }
+        
+        function deleteBudget(budgetId) {
+            if (confirm('האם אתה בטוח שברצונך למחוק תקציב זה?')) {
+                budgets = budgets.filter(b => b.id !== budgetId);
+                saveData();
+                renderBudgets();
+                
+                // שליחת אירוע לאנליטיקס של Firebase
+                try {
+                    if (typeof analytics !== 'undefined') {
+                        analytics.logEvent('budget_deleted');
+                    }
+                } catch (error) {
+                    console.error('Analytics error:', error);
+                }
+            }
+        }
+        
+        function renderBudgets() {
+            const container = document.getElementById('budgets-container');
+            const totalContainer = document.getElementById('total-budget-container');
+            
+            if (!container || !totalContainer) return;
+            
+            container.innerHTML = '';
+            totalContainer.innerHTML = '';
+            
+            // קבלת החודש והשנה הנבחרים
+            const selectedMonth = parseInt(document.getElementById('budget-view-month').value);
+            const selectedYear = parseInt(document.getElementById('budget-view-year').value);
+            
+            // חישוב ניצול התקציב לפי העסקאות בחודש הנבחר
+            const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
+            const endOfMonth = new Date(selectedYear, selectedMonth, 0); // היום האחרון בחודש
+            
+            // סינון עסקאות לחודש הנבחר
+            const monthTransactions = transactions.filter(transaction => {
+                const transactionDate = new Date(transaction.date);
+                return transactionDate >= startOfMonth && transactionDate <= endOfMonth && transaction.type === 'expense';
+            });
+            
+            // חישוב סך כל ההוצאות בחודש הנבחר
+            let totalExpenses = 0;
+            monthTransactions.forEach(transaction => {
+                totalExpenses += transaction.amount;
+            });
+            
+            // חישוב הוצאות לפי קטגוריות
+            const categoryExpenses = {};
+            monthTransactions.forEach(transaction => {
+                const catId = parseInt(transaction.categoryId);
+                if (!categoryExpenses[catId]) {
+                    categoryExpenses[catId] = 0;
+                }
+                categoryExpenses[catId] += transaction.amount;
+            });
+            
+            // הצגת התקציב הכולל
+            if (totalBudget.amount > 0) {
+                const percentage = (totalExpenses / totalBudget.amount) * 100;
+                
+                // קביעת צבע פס ההתקדמות
+                let progressClass = 'progress-under';
+                if (percentage >= 90 && percentage < 100) {
+                    progressClass = 'progress-warning';
+                } else if (percentage >= 100) {
+                    progressClass = 'progress-over';
+                }
+                
+                const totalBudgetElement = document.createElement('div');
+                totalBudgetElement.className = 'budget-item';
+                totalBudgetElement.style.marginBottom = '30px';
+                totalBudgetElement.style.border = '2px solid var(--primary-dark)';
+                
+                totalBudgetElement.innerHTML = `
+                    <h3>סיכום תקציב חודשי כולל</h3>
+                    <div class="recurring-details">
+                        <div class="recurring-detail">
+                            <p><strong>תקציב חודשי</strong></p>
+                            <p>${totalBudget.amount.toFixed(2)} ₪</p>
+                        </div>
+                        <div class="recurring-detail">
+                            <p><strong>הוצאות בפועל</strong></p>
+                            <p>${totalExpenses.toFixed(2)} ₪</p>
+                        </div>
+                        <div class="recurring-detail">
+                            <p><strong>ניצול תקציב</strong></p>
+                            <p>${percentage.toFixed(1)}%</p>
+                        </div>
+                    </div>
+                    ${totalBudget.description ? `<p><strong>הערות:</strong> ${totalBudget.description}</p>` : ''}
+                    <div class="progress-container">
+                        <div class="progress-bar ${progressClass}" style="width: ${Math.min(percentage, 100)}%">
+                            ${percentage.toFixed(1)}%
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button class="delete-btn" onclick="resetTotalBudget()">אפס תקציב כולל</button>
+                    </div>
+                `;
+                
+                totalContainer.appendChild(totalBudgetElement);
+            } else {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.innerHTML = '<p style="margin-bottom: 30px;">לא הוגדר תקציב כולל. הגדר תקציב חודשי כולל כדי לראות מעקב כללי אחר הוצאותיך.</p>';
+                totalContainer.appendChild(emptyMessage);
+            }
+            
+            // מיון התקציבים לפי שם הקטגוריה
+            const sortedBudgets = [...budgets].sort((a, b) => {
+                const categoryA = categories.find(c => c.id === parseInt(a.categoryId));
+                const categoryB = categories.find(c => c.id === parseInt(b.categoryId));
+                
+                if (!categoryA || !categoryB) return 0;
+                return categoryA.name.localeCompare(categoryB.name);
+            });
+            
+            // הצגת התקציבים
+            sortedBudgets.forEach(budget => {
+                const category = categories.find(c => c.id === parseInt(budget.categoryId));
+                if (!category) return; // דילוג אם הקטגוריה לא נמצאה
+                
+                const spent = categoryExpenses[parseInt(budget.categoryId)] || 0;
+                const percentage = (spent / budget.amount) * 100;
+                
+                // קביעת צבע פס ההתקדמות
+                let progressClass = 'progress-under';
+                if (percentage >= 90 && percentage < 100) {
+                    progressClass = 'progress-warning';
+                } else if (percentage >= 100) {
+                    progressClass = 'progress-over';
+                }
+                
+                const budgetElement = document.createElement('div');
+                budgetElement.className = 'budget-item';
+                
+                budgetElement.innerHTML = `
+                    <h3>${category.name}</h3>
+                    <div class="recurring-details">
+                        <div class="recurring-detail">
+                            <p><strong>תקציב חודשי</strong></p>
+                            <p>${budget.amount.toFixed(2)} ₪</p>
+                        </div>
+                        <div class="recurring-detail">
+                            <p><strong>הוצאות בפועל</strong></p>
+                            <p>${spent.toFixed(2)} ₪</p>
+                        </div>
+                        <div class="recurring-detail">
+                            <p><strong>ניצול תקציב</strong></p>
+                            <p>${percentage.toFixed(1)}%</p>
+                        </div>
+                    </div>
+                    ${budget.description ? `<p><strong>הערות:</strong> ${budget.description}</p>` : ''}
+                    <div class="progress-container">
+                        <div class="progress-bar ${progressClass}" style="width: ${Math.min(percentage, 100)}%">
+                            ${percentage.toFixed(1)}%
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button class="delete-btn" onclick="deleteBudget(${budget.id})">מחק</button>
+                    </div>
+                `;
+                
+                container.appendChild(budgetElement);
+            });
+            
+            // הוספת כפתור ליצירת תקציב אם לא קיימים תקציבים
+            if (sortedBudgets.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.innerHTML = '<p>לא הוגדרו תקציבים לקטגוריות. הוסף תקציב לקטגוריה כדי לעקוב אחר הוצאותיך לפי נושאים.</p>';
+                container.appendChild(emptyMessage);
+            }
+        }
+        
+        // פונקציה ליצירת דוח
+        function generateReport() {
+            const reportMonth = document.getElementById('report-month').value;
+            const reportYear = document.getElementById('report-year').value;
+            
+            // סינון עסקאות רלוונטיות לדוח
+            let reportTransactions = [...transactions];
+            
+            if (reportMonth !== 'all') {
+                reportTransactions = reportTransactions.filter(transaction => {
+                    const transactionDate = new Date(transaction.date);
+                    return transactionDate.getMonth() + 1 === parseInt(reportMonth);
+                });
+            }
+            
+            if (reportYear !== 'all') {
+                reportTransactions = reportTransactions.filter(transaction => {
+                    const transactionDate = new Date(transaction.date);
+                    return transactionDate.getFullYear() === parseInt(reportYear);
+                });
+            }
+            
+            // חישוב סיכומים
+            let totalIncome = 0;
+            let totalExpenses = 0;
+            
+            reportTransactions.forEach(transaction => {
+                if (transaction.type === 'income') {
+                    totalIncome += transaction.amount;
+                } else {
+                    totalExpenses += transaction.amount;
+                }
+            });
+            
+            const balance = totalIncome - totalExpenses;
+            
+            // עדכון סיכומים
+            document.getElementById('report-income').textContent = `${totalIncome.toFixed(2)} ₪`;
+            document.getElementById('report-expenses').textContent = `${totalExpenses.toFixed(2)} ₪`;
+            
+            const balanceElement = document.getElementById('report-balance');
+            balanceElement.textContent = `${balance.toFixed(2)} ₪`;
+            
+            if (balance >= 0) {
+                balanceElement.className = 'balance-positive';
+            } else {
+                balanceElement.className = 'balance-negative';
+            }
+            
+            // חישוב וסידור לפי קטגוריות - הוצאות
+            const expenseCategories = {};
+            const incomeCategories = {};
+            
+            reportTransactions.forEach(transaction => {
+                // מציאת שם הקטגוריה
+                const category = categories.find(c => c.id === parseInt(transaction.categoryId));
+                const categoryName = category ? category.name : 'לא מוגדרת';
+                
+                if (transaction.type === 'expense') {
+                    if (!expenseCategories[categoryName]) {
+                        expenseCategories[categoryName] = 0;
+                    }
+                    expenseCategories[categoryName] += transaction.amount;
+                } else {
+                    if (!incomeCategories[categoryName]) {
+                        incomeCategories[categoryName] = 0;
+                    }
+                    incomeCategories[categoryName] += transaction.amount;
+                }
+            });
+            
+            // הצגת הוצאות לפי קטגוריות
+            const expenseCategoryBody = document.getElementById('category-expenses-body');
+            expenseCategoryBody.innerHTML = '';
+            
+            // מיון הקטגוריות לפי סכום יורד
+            const sortedExpenseCategories = Object.entries(expenseCategories).sort((a, b) => b[1] - a[1]);
+            
+            for (const [category, amount] of sortedExpenseCategories) {
+                const percentage = totalExpenses > 0 ? (amount / totalExpenses * 100).toFixed(1) : "0.0";
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${category}</td>
+                    <td>${amount.toFixed(2)} ₪</td>
+                    <td>${percentage}%</td>
+                `;
+                expenseCategoryBody.appendChild(row);
+            }
+            
+            // הצגת הכנסות לפי קטגוריות
+            const incomeCategoryBody = document.getElementById('category-income-body');
+            incomeCategoryBody.innerHTML = '';
+            
+            // מיון הקטגוריות לפי סכום יורד
+            const sortedIncomeCategories = Object.entries(incomeCategories).sort((a, b) => b[1] - a[1]);
+            
+            for (const [category, amount] of sortedIncomeCategories) {
+                const percentage = totalIncome > 0 ? (amount / totalIncome * 100).toFixed(1) : "0.0";
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${category}</td>
+                    <td>${amount.toFixed(2)} ₪</td>
+                    <td>${percentage}%</td>
+                `;
+                incomeCategoryBody.appendChild(row);
+            }
+            
+            // הצגת תשלומים עתידיים
+            const today = new Date();
+            const futurePayments = transactions.filter(transaction => {
+                const transactionDate = new Date(transaction.date);
+                return transactionDate > today;
+            });
+            
+            // מיון לפי תאריך
+            futurePayments.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            const futurePaymentsBody = document.getElementById('future-payments-body');
+            futurePaymentsBody.innerHTML = '';
+            
+            futurePayments.forEach(payment => {
+                const date = new Date(payment.date);
+                const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+                
+                // מציאת שם הקטגוריה
+                const category = categories.find(c => c.id === parseInt(payment.categoryId));
+                const categoryName = category ? category.name : 'לא מוגדרת';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formattedDate}</td>
+                    <td>${payment.description}</td>
+                    <td>${categoryName}</td>
+                    <td>${payment.amount.toFixed(2)} ₪</td>
+                    <td>${payment.isRecurring ? 'הוצאה קבועה' : (payment.installments ? `תשלום ${payment.installments.current}/${payment.installments.total}` : 'רגיל')}</td>
+                `;
+                futurePaymentsBody.appendChild(row);
+            });
+            
+            // שליחת אירוע לאנליטיקס של Firebase
+            try {
+                if (typeof analytics !== 'undefined') {
+                    analytics.logEvent('report_generated', {
+                        month: reportMonth,
+                        year: reportYear,
+                        total_income: totalIncome,
+                        total_expenses: totalExpenses,
+                        balance: balance
+                    });
+                }
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+        }
+        
+        // פונקציית ייצוא כל הנתונים
+        function exportData() {
+            const data = {
+                transactions: transactions,
+                recurringExpenses: recurringExpenses,
+                categories: categories,
+                budgets: budgets,
+                totalBudget: totalBudget,
+                exportDate: new Date().toISOString(),
+                version: "1.0"
+            };
+            
+            // יצירת הורדה של קובץ JSON
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileName = `budget_export_${new Date().toISOString().slice(0,10)}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileName);
+            linkElement.click();
+            
+            // שליחת אירוע לאנליטיקס של Firebase
+            try {
+                if (typeof analytics !== 'undefined') {
+                    analytics.logEvent('data_exported');
+                }
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+        }
+        
+        // פונקציית ייבוא נתונים
+        function importData(jsonData) {
+            try {
+                const data = JSON.parse(jsonData);
+                
+                if (!data.transactions || !data.categories) {
+                    throw new Error("נתונים לא תקינים");
+                }
+                
+                // שמירת הנתונים החדשים
+                transactions = data.transactions;
+                recurringExpenses = data.recurringExpenses || [];
+                categories = data.categories;
+                budgets = data.budgets || [];
+                totalBudget = data.totalBudget || { amount: 0, description: '' };
+                
+                // שמירה וריענון התצוגה
+                saveData();
+                populateCategoryDropdowns();
+                renderTransactions();
+                renderRecurringExpenses();
+                renderCategories();
+                renderBudgets();
+                generateRecurringTransactions();
+                
+                // שליחת אירוע לאנליטיקס של Firebase
+                try {
+                    if (typeof analytics !== 'undefined') {
+                        analytics.logEvent('data_imported');
+                    }
+                } catch (error) {
+                    console.error('Analytics error:', error);
+                }
+                
+                return true;
+            } catch (error) {
+                alert(`שגיאה בייבוא הנתונים: ${error.message}`);
+                return false;
+            }
+        }
+        
+        // פונקציית פתיחת חלון ייבוא קובץ
+        function openImportDialog() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.json';
+            
+            fileInput.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = event => {
+                    const result = importData(event.target.result);
+                    if (result) {
+                        alert('הנתונים יובאו בהצלחה!');
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            fileInput.click();
+            
+            // שליחת אירוע לאנליטיקס של Firebase
+            try {
+                if (typeof analytics !== 'undefined') {
+                    analytics.logEvent('import_dialog_opened');
+                }
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+        }
+        
+        // פונקציית מחיקת כל הנתונים
+        function clearAllData() {
+            if (confirm('האם אתה בטוח שברצונך למחוק את כל הנתונים? פעולה זו היא בלתי הפיכה!')) {
+                if (confirm('לחץ אישור כדי למחוק את כל הנתונים. זו הזדמנות אחרונה לבטל!')) {
+                    // מחיקת כל הנתונים
+                    transactions = [];
+                    recurringExpenses = [];
+                    budgets = [];
+                    totalBudget = { amount: 0, description: '' };
+                    
+                    // שמירת הקטגוריות הבסיסיות
+                    categories = [
+                        { id: 1, name: "שכר", type: "income" },
+                        { id: 2, name: "מזון", type: "expense" },
+                        { id: 3, name: "תחבורה", type: "expense" },
+                        { id: 4, name: "דיור", type: "expense" },
+                        { id: 5, name: "בילויים", type: "expense" },
+                        { id: 6, name: "חשבונות", type: "expense" },
+                        { id: 7, name: "ביגוד", type: "expense" },
+                        { id: 8, name: "בריאות", type: "expense" },
+                        { id: 9, name: "חינוך", type: "expense" },
+                        { id: 10, name: "אחר", type: "both" }
+                    ];
+                    
+                    // שמירה וריענון המערכת
+                    saveData();
+                    populateCategoryDropdowns();
+                    renderTransactions();
+                    renderRecurringExpenses();
+                    renderCategories();
+                    renderBudgets();
+                    
+                    alert('כל הנתונים נמחקו בהצלחה');
+                    
+                    // שליחת אירוע לאנליטיקס של Firebase
+                    try {
+                        if (typeof analytics !== 'undefined') {
+                            analytics.logEvent('all_data_cleared');
+                        }
+                    } catch (error) {
+                        console.error('Analytics error:', error);
+                    }
+                }
+            }
+        }
+        
+        function saveData() {
+            localStorage.setItem('budget-transactions', JSON.stringify(transactions));
+            localStorage.setItem('budget-recurring', JSON.stringify(recurringExpenses));
+            localStorage.setItem('budget-categories', JSON.stringify(categories));
+            localStorage.setItem('budget-budgets', JSON.stringify(budgets));
+            localStorage.setItem('budget-total-budget', JSON.stringify(totalBudget));
+            
+            // שליחת אירוע לאנליטיקס של Firebase
+            try {
+                if (typeof analytics !== 'undefined') {
+                    analytics.logEvent('data_saved');
+                }
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+        }
+        
+        function loadData() {
+            const savedTransactions = localStorage.getItem('budget-transactions');
+            const savedRecurring = localStorage.getItem('budget-recurring');
+            const savedCategories = localStorage.getItem('budget-categories');
+            const savedBudgets = localStorage.getItem('budget-budgets');
+            const savedTotalBudget = localStorage.getItem('budget-total-budget');
+            
+            if (savedTransactions) {
+                transactions = JSON.parse(savedTransactions);
+            }
+            
+            if (savedRecurring) {
+                recurringExpenses = JSON.parse(savedRecurring);
+            }
+            
+            if (savedCategories) {
+                categories = JSON.parse(savedCategories);
+            }
+            
+            if (savedBudgets) {
+                budgets = JSON.parse(savedBudgets);
+            }
+            
+            if (savedTotalBudget) {
+                totalBudget = JSON.parse(savedTotalBudget);
+            }
+            
+            populateCategoryDropdowns();
+            renderTransactions();
+            renderRecurringExpenses();
+            renderCategories();
+            renderBudgets();
+            generateRecurringTransactions();
+            
+            // שליחת אירוע לאנליטיקס של Firebase
+            try {
+                if (typeof analytics !== 'undefined') {
+                    analytics.logEvent('data_loaded');
+                }
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+        }
+        
+        // פונקציה להעתקת עסקה
+        function duplicateTransaction(id) {
+            const originalTransaction = transactions.find(t => t.id === id);
+            
+            if (!originalTransaction) {
+                alert('העסקה לא נמצאה');
+                return;
+            }
+            
+            const newTransaction = {
+                ...originalTransaction,
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0]  // תאריך היום
+            };
+            
+            // אם יש מידע על תשלומים, איפוס החלק הזה
+            if (newTransaction.installments) {
+                newTransaction.installments = null;
+            }
+            
+            // אם זו עסקה קבועה, הפיכתה לרגילה
+            if (newTransaction.isRecurring) {
+                newTransaction.isRecurring = false;
+                delete newTransaction.recurringId;
+            }
+            
+            transactions.push(newTransaction);
+            saveData();
+            renderTransactions();
+            renderBudgets();
+            
+            // שליחת אירוע לאנליטיקס של Firebase
+            try {
+                if (typeof analytics !== 'undefined') {
+                    analytics.logEvent('transaction_duplicated', {
+                        transaction_type: newTransaction.type,
+                        transaction_amount: newTransaction.amount
+                    });
+                }
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+            
+            alert('העסקה הועתקה בהצלחה');
+        }
+        
+        // פונקציה להצגת תחזית תזרים מזומנים
+        function generateCashFlow() {
+            const months = 6; // מספר חודשים לתחזית
+            const today = new Date();
+            const cashFlowData = [];
+            
+            // חישוב תזרים לכל חודש
+            for (let i = 0; i < months; i++) {
+                const targetMonth = new Date(today);
+                targetMonth.setMonth(today.getMonth() + i);
+                
+                const startOfMonth = new Date(targetMonth.getFullYear(), targetMonth.getMonth(), 1);
+                const endOfMonth = new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 0);
+                
+                // סינון עסקאות לחודש הרלוונטי
+                const monthTransactions = transactions.filter(transaction => {
+                    const transactionDate = new Date(transaction.date);
+                    return transactionDate >= startOfMonth && transactionDate <= endOfMonth;
+                });
+                
+                // חישוב סכומים
+                let income = 0;
+                let expense = 0;
+                
+                monthTransactions.forEach(transaction => {
+                    if (transaction.type === 'income') {
+                        income += transaction.amount;
+                    } else {
+                        expense += transaction.amount;
+                    }
+                });
+                
+                const balance = income - expense;
+                const monthName = targetMonth.toLocaleString('he-IL', { month: 'long', year: 'numeric' });
+                
+                cashFlowData.push({
+                    month: monthName,
+                    income: income,
+                    expense: expense,
+                    balance: balance
+                });
+            }
+            
+            // יצירת הודעה עם התחזית
+            let message = '<h3>תחזית תזרים מזומנים</h3>';
+            message += '<table style="width: 100%; border-collapse: collapse; margin-top: 20px;">';
+            message += '<tr><th>חודש</th><th>הכנסות</th><th>הוצאות</th><th>מאזן</th></tr>';
+            
+            let totalIncome = 0;
+            let totalExpense = 0;
+            
+            cashFlowData.forEach(data => {
+                totalIncome += data.income;
+                totalExpense += data.expense;
+                
+                const balanceClass = data.balance >= 0 ? 'balance-positive' : 'balance-negative';
+                
+                message += `
+                    <tr>
+                        <td>${data.month}</td>
+                        <td>${data.income.toFixed(2)} ₪</td>
+                        <td>${data.expense.toFixed(2)} ₪</td>
+                        <td class="${balanceClass}">${data.balance.toFixed(2)} ₪</td>
+                    </tr>
+                `;
+            });
+            
+            const totalBalance = totalIncome - totalExpense;
+            const totalBalanceClass = totalBalance >= 0 ? 'balance-positive' : 'balance-negative';
+            
+            message += `
+                <tr style="font-weight: bold; background-color: #f2f2f2;">
+                    <td>סה"כ</td>
+                    <td>${totalIncome.toFixed(2)} ₪</td>
+                    <td>${totalExpense.toFixed(2)} ₪</td>
+                    <td class="${totalBalanceClass}">${totalBalance.toFixed(2)} ₪</td>
+                </tr>
+            `;
+            
+            message += '</table>';
+            
+            // הצגת ההודעה למשתמש
+            const cashFlowContainer = document.getElementById('cash-flow-container');
+            if (cashFlowContainer) {
+                cashFlowContainer.innerHTML = message;
+                
+                // שליחת אירוע לאנליטיקס של Firebase
+                try {
+                    if (typeof analytics !== 'undefined') {
+                        analytics.logEvent('cash_flow_generated', {
+                            months: months,
+                            total_balance: totalBalance
+                        });
+                    }
+                } catch (error) {
+                    console.error('Analytics error:', error);
+                }
+            } else {
+                alert('לא ניתן להציג את תחזית תזרים המזומנים');
+            }
+        }
+        
+        // פונקציה להצגת תזכורות לתשלומים קרובים
+        function showPaymentReminders() {
+            const today = new Date();
+            const nextWeek = new Date(today);
+            nextWeek.setDate(today.getDate() + 7);
+            
+            // סינון עסקאות שמועד התשלום שלהן בשבוע הקרוב
+            const upcomingPayments = transactions.filter(transaction => {
+                const transactionDate = new Date(transaction.date);
+                return transaction.type === 'expense' && 
+                       transactionDate > today && 
+                       transactionDate <= nextWeek;
+            });
+            
+            // מיון לפי תאריך (מהקרוב לרחוק)
+            upcomingPayments.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            if (upcomingPayments.length === 0) {
+                alert('אין תשלומים קרובים בשבוע הקרוב');
+                return;
+            }
+            
+            // יצירת הודעה עם רשימת התשלומים
+            let message = '<h3>תשלומים קרובים</h3>';
+            message += '<table style="width: 100%; border-collapse: collapse; margin-top: 20px;">';
+            message += '<tr><th>תאריך</th><th>תיאור</th><th>קטגוריה</th><th>סכום</th><th>סוג</th></tr>';
+            
+            upcomingPayments.forEach(payment => {
+                const date = new Date(payment.date);
+                const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+                
+                // מציאת שם הקטגוריה
+                const category = categories.find(c => c.id === parseInt(payment.categoryId));
+                const categoryName = category ? category.name : 'לא מוגדרת';
+                
+                let paymentType = 'רגיל';
+                if (payment.isRecurring) {
+                    paymentType = 'הוצאה קבועה';
+                } else if (payment.installments) {
+                    paymentType = `תשלום ${payment.installments.current}/${payment.installments.total}`;
+                }
+                
+                message += `
+                    <tr>
+                        <td>${formattedDate}</td>
+                        <td>${payment.description}</td>
+                        <td>${categoryName}</td>
+                        <td>${payment.amount.toFixed(2)} ₪</td>
+                        <td>${paymentType}</td>
+                    </tr>
+                `;
+            });
+            
+            message += '</table>';
+            
+            // הצגת ההודעה למשתמש
+            const reminderContainer = document.getElementById('reminder-container');
+            if (reminderContainer) {
+                reminderContainer.innerHTML = message;
+                
+                // שליחת אירוע לאנליטיקס של Firebase
+                try {
+                    if (typeof analytics !== 'undefined') {
+                        analytics.logEvent('payment_reminders_shown', {
+                            upcoming_payments_count: upcomingPayments.length
+                        });
+                    }
+                } catch (error) {
+                    console.error('Analytics error:', error);
+                }
+            } else {
+                alert(message);
+            }
+        }
+        
+        // העברת הפונקציות לחלון הגלובלי
+        window.addTransaction = addTransaction;
+        window.addInstallmentTransactions = addInstallmentTransactions;
+        window.addRecurringExpense = addRecurringExpense;
+        window.generateRecurringTransactions = generateRecurringTransactions;
+        window.deleteTransaction = deleteTransaction;
+        window.deleteRecurringExpense = deleteRecurringExpense;
+        window.filterTransactions = filterTransactions;
+        window.renderTransactions = renderTransactions;
+        window.renderRecurringExpenses = renderRecurringExpenses;
+        window.addCategory = addCategory;
+        window.deleteCategory = deleteCategory;
+        window.editCategory = editCategory;
+        window.renderCategories = renderCategories;
+        window.filterCategories = filterCategories;
+        window.populateCategoryDropdowns = populateCategoryDropdowns;
+        window.addBudget = addBudget;
+        window.deleteBudget = deleteBudget;
+        window.renderBudgets = renderBudgets;
+        window.generateReport = generateReport;
+        window.saveData = saveData;
+        window.loadData = loadData;
+        window.addTotalBudget = addTotalBudget;
+        window.resetTotalBudget = resetTotalBudget;
+        window.exportData = exportData;
+        window.importData = importData;
+        window.openImportDialog = openImportDialog;
+        window.clearAllData = clearAllData;
+        window.duplicateTransaction = duplicateTransaction;
+        window.generateCashFlow = generateCashFlow;
+        window.showPaymentReminders = showPaymentReminders;
+        
+        // אתחול המערכת
+        document.addEventListener('DOMContentLoaded', function() {
+            // הגדרת התאריך הנוכחי לשדות תאריך
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            document.getElementById('transaction-date').value = formattedDate;
+            document.getElementById('recurring-start-date').value = formattedDate;
+            document.getElementById('first-payment-date').value = formattedDate;
+            
+            // אתחול סלקטורים של שנים
+            const currentYear = today.getFullYear();
+            const yearSelects = document.querySelectorAll('#filter-year, #report-year, #budget-view-year');
+            
+            for (let i = currentYear - 5; i <= currentYear + 5; i++) {
+                yearSelects.forEach(select => {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    if (i === currentYear) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+            }
+            
+            // טעינת נתונים מהזיכרון המקומי
+            loadData();
+            
+            // ניהול לשוניות
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    
+                    // הסרת המחלקה 'active' מכל הלשוניות והתוכן
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // הוספת המחלקה 'active' ללשונית ולתוכן הנבחר
+                    this.classList.add('active');
+                    document.getElementById(targetTab).classList.add('active');
+                    
+                    // שליחת אירוע לאנליטיקס של Firebase
+                    try {
+                        if (typeof analytics !== 'undefined') {
+                            analytics.logEvent('tab_changed', {
+                                tab_name: targetTab
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Analytics error:', error);
+                    }
+                });
+            });
+            
+            // מאזינים לאירועים
+            document.getElementById('transaction-type').addEventListener('change', function() {
+                const installmentsSection = document.getElementById('installments-section');
+                if (this.value === 'expense') {
+                    installmentsSection.style.display = 'block';
+                } else {
+                    installmentsSection.style.display = 'none';
+                    document.getElementById('is-installments').value = 'no';
+                    document.getElementById('installments-details').style.display = 'none';
+                }
+                
+                // עדכון רשימת הקטגוריות לפי סוג העסקה
+                populateCategoryDropdowns();
+                
+                // שליחת אירוע לאנליטיקס של Firebase
+                try {
+                    if (typeof analytics !== 'undefined') {
+                        analytics.logEvent('transaction_type_changed', {
+                            new_type: this.value
+                        });
+                    }
+                } catch (error) {
+                    console.error('Analytics error:', error);
+                }
+            });
+            
+            document.getElementById('is-installments').addEventListener('change', function() {
+                const installmentsDetails = document.getElementById('installments-details');
+                if (this.value === 'yes') {
+                    installmentsDetails.style.display = 'block';
+                    
+                    // שליחת אירוע לאנליטיקס של Firebase
+                    try {
+                        if (typeof analytics !== 'undefined') {
+                            analytics.logEvent('installments_enabled');
+                        }
+                    } catch (error) {
+                        console.error('Analytics error:', error);
+                    }
+                } else {
+                    installmentsDetails.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('recurring-end-type').addEventListener('change', function() {
+                const endDateGroup = document.getElementById('recurring-end-date-group');
+                const occurrencesGroup = document.getElementById('recurring-occurrences-group');
+                
+                endDateGroup.style.display = 'none';
+                occurrencesGroup.style.display = 'none';
+                
+                if (this.value === 'date') {
+                    endDateGroup.style.display = 'block';
+                } else if (this.value === 'occurrences') {
+                    occurrencesGroup.style.display = 'block';
+                }
+                
+                // שליחת אירוע לאנליטיקס של Firebase
+                try {
+                    if (typeof analytics !== 'undefined') {
+                        analytics.logEvent('recurring_end_type_changed', {
+                            end_type: this.value
+                        });
+                    }
+                } catch (error) {
+                    console.error('Analytics error:', error);
+                }
+            });
+            
+            // מאזינים לכפתורים
+            document.getElementById('add-transaction').addEventListener('click', addTransaction);
+            document.getElementById('add-recurring').addEventListener('click', addRecurringExpense);
+            document.getElementById('add-category').addEventListener('click', addCategory);
+            document.getElementById('add-budget').addEventListener('click', addBudget);
+            document.getElementById('add-total-budget').addEventListener('click', addTotalBudget);
+            document.getElementById('generate-report').addEventListener('click', generateReport);
+            document.getElementById('print-report').addEventListener('click', function() {
+                window.print();
+                
+                // שליחת אירוע לאנליטיקס של Firebase
+                try {
+                    if (typeof analytics !== 'undefined') {
+                        analytics.logEvent('report_printed');
+                    }
+                } catch (error) {
+                    console.error('Analytics error:', error);
+                }
+            });
+            
+            // מאזינים לשינויים בפילטרים
+            const filterElements = document.querySelectorAll('#filter-month, #filter-year, #filter-type, #filter-category');
+            filterElements.forEach(filter => {
+                filter.addEventListener('change', filterTransactions);
+            });
+            
+            // מאזינים לשינויים בפילטרים נוספים
+            const categoryFilterElement = document.getElementById('category-filter');
+            if (categoryFilterElement) {
+                categoryFilterElement.addEventListener('change', filterCategories);
+            }
+            
+            const budgetViewMonthElement = document.getElementById('budget-view-month');
+            const budgetViewYearElement = document.getElementById('budget-view-year');
+            
+            if (budgetViewMonthElement && budgetViewYearElement) {
+                budgetViewMonthElement.addEventListener('change', renderBudgets);
+                budgetViewYearElement.addEventListener('change', renderBudgets);
+                
+                // הגדרת החודש הנוכחי לברירת מחדל
+                budgetViewMonthElement.value = (today.getMonth() + 1).toString();
+            }
+            
+            // מאזינים לכפתורי ייצוא/ייבוא נתונים
+            const exportBtn = document.getElementById('export-data');
+            const importBtn = document.getElementById('import-data');
+            const clearBtn = document.getElementById('clear-data');
+            
+            if (exportBtn) exportBtn.addEventListener('click', exportData);
+            if (importBtn) importBtn.addEventListener('click', openImportDialog);
+            if (clearBtn) clearBtn.addEventListener('click', clearAllData);
+            
+            // שליחת אירוע לאנליטיקס של Firebase - אתחול המערכת
+            try {
+                if (typeof analytics !== 'undefined') {
+                    analytics.logEvent('app_initialized');
+                }
+            } catch (error) {
+                console.error('Analytics error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
