@@ -2649,9 +2649,7 @@ function addRecurringExpense() {
     } catch (error) {
         console.error('Analytics error:', error);
     }
-}
-
-function generateRecurringTransactions() {
+}function generateRecurringTransactions() {
     // מחיקת עסקאות קבועות עתידיות
     transactions = transactions.filter(transaction => !transaction.isRecurring || new Date(transaction.date) <= new Date());
     
@@ -2662,6 +2660,20 @@ function generateRecurringTransactions() {
         const startDate = new Date(expense.startDate);
         const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
+        
+        // ספירת מספר העסקאות שכבר נוצרו להוצאה זו - זה התיקון
+        const existingTransactionsCount = transactions.filter(t => 
+            t.isRecurring && t.recurringId === expense.id && 
+            new Date(t.date) <= today
+        ).length;
+        
+        // עדכון מספר התשלומים שכבר בוצעו
+        expense.completedOccurrences = existingTransactionsCount;
+        
+        // בדיקה אם הושלמו כל התשלומים
+        if (expense.endType === 'occurrences' && existingTransactionsCount >= expense.occurrences) {
+            return; // דילוג על יצירת עסקאות נוספות
+        }
         
         // יצירת עסקאות עד 6 חודשים קדימה
         for (let i = 0; i < 6; i++) {
@@ -2676,8 +2688,12 @@ function generateRecurringTransactions() {
                 continue;
             }
             
-            if (expense.endType === 'occurrences' && expense.completedOccurrences >= expense.occurrences) {
-                continue;
+            // בדיקה שלא חרגנו ממספר התשלומים
+            if (expense.endType === 'occurrences') {
+                const potentialTransactionsCount = existingTransactionsCount + i;
+                if (potentialTransactionsCount >= expense.occurrences) {
+                    continue;
+                }
             }
             
             // בדיקה האם יש כבר עסקה עבור חודש זה
@@ -2697,7 +2713,7 @@ function generateRecurringTransactions() {
                     categoryId: expense.categoryId,
                     description: expense.description,
                     amount: expense.amount,
-                    paymentMethod: expense.paymentMethod, // אמצעי תשלום - חדש
+                    paymentMethod: expense.paymentMethod,
                     installments: null,
                     isRecurring: true,
                     recurringId: expense.id
@@ -2710,8 +2726,10 @@ function generateRecurringTransactions() {
     
     saveData();
     renderTransactions();
-    renderBudgets(); // עדכון תצוגת התקציבים
+    renderBudgets();
 }
+
+
 
 function deleteTransaction(id) {
     if (confirm('האם אתה בטוח שברצונך למחוק עסקה זו?')) {
