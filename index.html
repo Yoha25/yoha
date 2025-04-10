@@ -2650,85 +2650,130 @@ function addRecurringExpense() {
         console.error('Analytics error:', error);
     }
 }function generateRecurringTransactions() {
-    // מחיקת עסקאות קבועות עתידיות
-    transactions = transactions.filter(transaction => !transaction.isRecurring || new Date(transaction.date) <= new Date());
-    
+    // מחיקת עסקאות קבועות עתידיות בלבד
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
-    // בדיקת הוצאות קבועות ויצירת עסקאות עבורן
+    transactions = transactions.filter(transaction => 
+        !transaction.isRecurring || 
+        new Date(transaction.date) <= today
+    );
+    
+    // עיבוד כל הוצאה קבועה
     recurringExpenses.forEach(expense => {
+        // בדיקה שההוצאה הקבועה תקפה
         const startDate = new Date(expense.startDate);
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
+        startDate.setHours(0, 0, 0, 0);
         
-        // ספירת מספר העסקאות שכבר נוצרו להוצאה זו - זה התיקון
-        const existingTransactionsCount = transactions.filter(t => 
-            t.isRecurring && t.recurringId === expense.id && 
-            new Date(t.date) <= today
-        ).length;
-        
-        // עדכון מספר התשלומים שכבר בוצעו
-        expense.completedOccurrences = existingTransactionsCount;
-        
-        // בדיקה אם הושלמו כל התשלומים
-        if (expense.endType === 'occurrences' && existingTransactionsCount >= expense.occurrences) {
-            return; // דילוג על יצירת עסקאות נוספות
+        // אם תאריך ההתחלה עדיין בעתיד, נדלג
+        if (startDate > today) {
+            return;
         }
         
-        // יצירת עסקאות עד 6 חודשים קדימה
-        for (let i = 0; i < 6; i++) {
+        // ספירת תשלומים קיימים שכבר בוצעו עבור הוצאה זו
+        const existingTransactions = transactions.filter(t => 
+            t.isRecurring && 
+            t.recurringId === expense.id
+        );
+        
+        // עדכון מספר התשלומים שכבר בוצעו
+        expense.completedOccurrences = existingTransactions.length;
+        
+        // בדיקה אם הגענו למספר התשלומים המקסימלי
+        if (expense.endType === 'occurrences' && existingTransactions.length >= expense.occurrences) {
+            return; // דילוג - הוצאה זו הסתיימה
+        }
+        
+        // בדיקה אם עברנו את תאריך הסיום
+        if (expense.endType === 'date' && expense.endDate) {
+            const endDate = new Date(expense.endDate);
+            endDate.setHours(23, 59, 59, 999);
+            
+            if (today > endDate) {
+                return; // דילוג - הוצאה זו הסתיימה
+            }
+        }
+        
+        // יצירת עסקאות עתידיות - עד 12 חודשים קדימה
+        // נתחיל מהחודש הנוכחי (או הבא, אם כבר עבר היום בחודש)
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+        const currentYear = currentDate.getFullYear();
+        
+        // מספר התשלומים שנותרו ליצירה במקרה של הגבלת תשלומים
+        let remainingOccurrences = expense.endType === 'occurrences' ? 
+            expense.occurrences - expense.completedOccurrences : 
+            Infinity;
+        
+        // יצירת עד 12 תשלומים עתידיים או עד לסיום התשלומים
+        for (let i = 0; i < 12 && remainingOccurrences > 0; i++) {
+            // חישוב החודש והשנה עבור התשלום הבא
             const targetMonth = (currentMonth + i) % 12;
             const targetYear = currentYear + Math.floor((currentMonth + i) / 12);
             
-            // יצירת תאריך היעד - חישוב התאריך הקרוב ביותר לפי היום בחודש
-            const targetDate = new Date(targetYear, targetMonth, expense.dayOfMonth);
+            // טיפול במקרה שהיום בחודש גדול ממספר הימים בחודש
+            const targetDay = expense.dayOfMonth;
+            const lastDayOfMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+            const validDay = Math.min(targetDay, lastDayOfMonth);
             
-            // בדיקה האם התאריך עדיין רלוונטי
-            if (expense.endType === 'date' && new Date(expense.endDate) < targetDate) {
-                continue;
+            // יצירת תאריך התשלום
+            const paymentDate = new Date(targetYear, targetMonth, validDay);
+            paymentDate.setHours(0, 0, 0, 0);
+            
+            // בדיקה אם התאריך בעתיד
+            if (paymentDate <= today) {
+                continue; // דילוג - התאריך כבר עבר
             }
             
-            // בדיקה שלא חרגנו ממספר התשלומים
-            if (expense.endType === 'occurrences') {
-                const potentialTransactionsCount = existingTransactionsCount + i;
-                if (potentialTransactionsCount >= expense.occurrences) {
-                    continue;
+            // בדיקה אם התאריך אחרי תאריך הסיום (אם הוגדר)
+            if (expense.endType === 'date' && expense.endDate) {
+                const endDate = new Date(expense.endDate);
+                endDate.setHours(23, 59, 59, 999);
+                
+                if (paymentDate > endDate) {
+                    break; // יציאה מהלולאה - הגענו לתאריך הסיום
                 }
             }
             
-            // בדיקה האם יש כבר עסקה עבור חודש זה
+            // בדיקה אם כבר יש עסקה ליום זה
+            const formattedDate = paymentDate.toISOString().split('T')[0];
+            
+            // בדיקה אם כבר יש עסקה קבועה זהה באותו תאריך
             const existingTransaction = transactions.find(t => 
                 t.isRecurring && 
                 t.recurringId === expense.id && 
-                new Date(t.date).getMonth() === targetMonth && 
-                new Date(t.date).getFullYear() === targetYear
+                t.date === formattedDate
             );
             
-            if (!existingTransaction && targetDate > startDate) {
-                // יצירת עסקה חדשה
-                const transaction = {
-                    id: Date.now() + i,
-                    date: targetDate.toISOString().split('T')[0],
-                    type: 'expense',
-                    categoryId: expense.categoryId,
-                    description: expense.description,
-                    amount: expense.amount,
-                    paymentMethod: expense.paymentMethod,
-                    installments: null,
-                    isRecurring: true,
-                    recurringId: expense.id
-                };
-                
-                transactions.push(transaction);
+            if (existingTransaction) {
+                continue; // דילוג - כבר יש עסקה לתאריך זה
             }
+            
+            // יצירת העסקה החדשה
+            const transaction = {
+                id: Date.now() + Math.floor(Math.random() * 1000) + i, // להבטיח ID ייחודי
+                date: formattedDate,
+                type: 'expense',
+                categoryId: expense.categoryId,
+                description: expense.description,
+                amount: expense.amount,
+                paymentMethod: expense.paymentMethod,
+                installments: null,
+                isRecurring: true,
+                recurringId: expense.id
+            };
+            
+            transactions.push(transaction);
+            remainingOccurrences--;
         }
     });
     
+    // שמירת הנתונים ועדכון התצוגה
     saveData();
     renderTransactions();
     renderBudgets();
 }
-
+  
 
 
 function deleteTransaction(id) {
