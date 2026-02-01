@@ -1212,18 +1212,26 @@
             const goodHabits = habits.filter(h => h.type === 'good');
             const badHabits = habits.filter(h => h.type === 'bad');
 
+            // Add habit button at the top
+            let html = `
+                <button class="add-habit-btn" id="addHabitBtnDaily">
+                    <span>+</span>
+                    הוסף הרגל חדש
+                </button>
+            `;
+
             if (habits.length === 0) {
-                elements.dailyHabits.innerHTML = `
+                html += `
                     <div class="empty-state">
                         <div class="empty-state-icon">📝</div>
                         <h3>אין הרגלים עדיין</h3>
-                        <p>לחץ על "ניהול הרגלים" כדי להוסיף את ההרגל הראשון שלך</p>
+                        <p>לחץ על הכפתור למעלה כדי להוסיף את ההרגל הראשון שלך</p>
                     </div>
                 `;
+                elements.dailyHabits.innerHTML = html;
+                document.getElementById('addHabitBtnDaily').addEventListener('click', () => openModal());
                 return;
             }
-
-            let html = '';
 
             if (goodHabits.length > 0) {
                 html += `<h2 class="habits-section-title good">✅ הרגלים טובים</h2>`;
@@ -1245,6 +1253,9 @@
 
             elements.dailyHabits.innerHTML = html;
 
+            // Add event listener for the add habit button
+            document.getElementById('addHabitBtnDaily').addEventListener('click', () => openModal());
+
             // Add event listeners for counter buttons
             document.querySelectorAll('.counter-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -1259,9 +1270,25 @@
 
         function renderHabitCard(habit) {
             const currentValue = getHabitLog(habit.id);
-            const progress = Math.min((currentValue / habit.target) * 100, 100);
-            const isCompleted = currentValue >= habit.target;
             const isGood = habit.type === 'good';
+
+            // For good habits: success = reaching target
+            // For bad habits: success = 0 falls (clean day)
+            let progress, isCompleted, statusText, progressClass;
+
+            if (isGood) {
+                progress = Math.min((currentValue / habit.target) * 100, 100);
+                isCompleted = currentValue >= habit.target;
+                statusText = `${currentValue} / ${habit.target} ${habit.unit}`;
+                progressClass = 'good';
+            } else {
+                // Bad habit: 0 = 100% success, more falls = less success
+                const maxFalls = habit.target; // target = maximum acceptable falls
+                isCompleted = currentValue === 0; // Clean day = success
+                progress = isCompleted ? 100 : Math.max(0, 100 - (currentValue / maxFalls) * 100);
+                progressClass = isCompleted ? 'good' : 'bad';
+                statusText = isCompleted ? '🎉 יום נקי!' : `😔 ${currentValue} נפילות`;
+            }
 
             return `
                 <div class="habit-card ${habit.type} ${isCompleted ? 'completed' : ''}">
@@ -1278,16 +1305,16 @@
                             <button class="counter-btn plus" data-habit="${habit.id}" data-action="plus">+</button>
                         </div>
                         <div class="counter-target">
-                            יעד: <span>${habit.target} ${habit.unit}</span>
+                            ${isGood ? `יעד: <span>${habit.target} ${habit.unit}</span>` : `<span>${statusText}</span>`}
                         </div>
                     </div>
                     <div class="progress-container">
                         <div class="progress-bar">
-                            <div class="progress-fill ${habit.type}" style="width: ${progress}%"></div>
+                            <div class="progress-fill ${progressClass}" style="width: ${progress}%"></div>
                         </div>
                         <div class="progress-text">
-                            <span>${currentValue} / ${habit.target} ${habit.unit}</span>
-                            <span>${Math.round(progress)}%</span>
+                            <span>${isGood ? `${currentValue} / ${habit.target} ${habit.unit}` : `נפילות: ${currentValue}`}</span>
+                            <span>${isCompleted ? '✓' : Math.round(progress) + '%'}</span>
                         </div>
                     </div>
                 </div>
@@ -1348,12 +1375,15 @@
         }
 
         function renderManagementCard(habit) {
+            const defaultDesc = habit.type === 'good'
+                ? `יעד: ${habit.target} ${habit.unit} ביום`
+                : `מעקב נפילות יומי`;
             return `
                 <div class="habit-card ${habit.type}">
                     <div class="habit-card-header">
                         <div class="habit-info">
                             <h3>${habit.icon} ${habit.name}</h3>
-                            <p>${habit.description || `יעד: ${habit.target} ${habit.unit} ביום`}</p>
+                            <p>${habit.description || defaultDesc}</p>
                         </div>
                         <div class="habit-actions">
                             <button class="habit-action-btn edit-habit-btn" data-habit="${habit.id}" title="ערוך">✏️</button>
@@ -1378,12 +1408,17 @@
             let todayCompleted = 0;
             habits.forEach(habit => {
                 const value = getHabitLog(habit.id, today);
-                if (value >= habit.target) todayCompleted++;
+                // For good habits: success = reached target
+                // For bad habits: success = 0 falls (clean day)
+                const isSuccess = habit.type === 'good'
+                    ? value >= habit.target
+                    : value === 0;
+                if (isSuccess) todayCompleted++;
             });
 
-            // Calculate streak for good habits
+            // Calculate streak for all habits (good and bad)
             let maxStreak = 0;
-            habits.filter(h => h.type === 'good').forEach(habit => {
+            habits.forEach(habit => {
                 const streak = calculateStreak(habit);
                 if (streak > maxStreak) maxStreak = streak;
             });
@@ -1447,8 +1482,8 @@
                             <span class="habit-stat-type ${habit.type}">
                                 ${habit.type === 'good' ? 'הרגל טוב' : 'הרגל רע'}
                             </span>
-                            ${stats.currentStreak > 0 && habit.type === 'good' ?
-                                `<span class="streak-badge">🔥 ${stats.currentStreak} ימים</span>` :
+                            ${stats.currentStreak > 0 ?
+                                `<span class="streak-badge">🔥 ${stats.currentStreak} ${habit.type === 'good' ? 'ימים' : 'ימים נקיים'}</span>` :
                                 ''}
                         </div>
                     </div>
@@ -1459,7 +1494,7 @@
                         </div>
                         <div class="habit-stat-item">
                             <div class="habit-stat-item-value">${stats.completedDays}</div>
-                            <div class="habit-stat-item-label">ימים שהושלמו</div>
+                            <div class="habit-stat-item-label">${habit.type === 'good' ? 'ימים שהושלמו' : 'ימים נקיים'}</div>
                         </div>
                         <div class="habit-stat-item">
                             <div class="habit-stat-item-value">${stats.completionRate}%</div>
@@ -1467,15 +1502,15 @@
                         </div>
                         <div class="habit-stat-item">
                             <div class="habit-stat-item-value">${stats.totalCount}</div>
-                            <div class="habit-stat-item-label">סה"כ ${habit.unit}</div>
+                            <div class="habit-stat-item-label">${habit.type === 'good' ? `סה"כ ${habit.unit}` : 'סה"כ נפילות'}</div>
                         </div>
                         <div class="habit-stat-item">
                             <div class="habit-stat-item-value">${stats.avgPerDay}</div>
-                            <div class="habit-stat-item-label">ממוצע יומי</div>
+                            <div class="habit-stat-item-label">${habit.type === 'good' ? 'ממוצע יומי' : 'ממוצע נפילות יומי'}</div>
                         </div>
                         <div class="habit-stat-item">
                             <div class="habit-stat-item-value">${stats.bestStreak}</div>
-                            <div class="habit-stat-item-label">רצף מקסימלי</div>
+                            <div class="habit-stat-item-label">${habit.type === 'good' ? 'רצף מקסימלי' : 'רצף נקי מקסימלי'}</div>
                         </div>
                     </div>
                     <div class="weekly-chart">
@@ -1497,6 +1532,7 @@
         function calculateHabitStats(habit) {
             const logs = getLogs();
             const habitLogs = [];
+            const isGood = habit.type === 'good';
 
             Object.keys(logs).forEach(key => {
                 if (key.endsWith(`_${habit.id}`)) {
@@ -1511,7 +1547,11 @@
             habitLogs.sort((a, b) => a.date - b.date);
 
             const totalDays = habitLogs.length;
-            const completedDays = habitLogs.filter(l => l.value >= habit.target).length;
+            // For good habits: completed = reached target
+            // For bad habits: completed = 0 falls (clean day)
+            const completedDays = isGood
+                ? habitLogs.filter(l => l.value >= habit.target).length
+                : habitLogs.filter(l => l.value === 0).length;
             const totalCount = habitLogs.reduce((sum, l) => sum + l.value, 0);
             const avgPerDay = totalDays > 0 ? (totalCount / totalDays).toFixed(1) : 0;
             const completionRate = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
@@ -1520,9 +1560,6 @@
             let currentStreak = 0;
             let bestStreak = 0;
             let tempStreak = 0;
-
-            // Sort by date descending for current streak
-            const sortedLogs = [...habitLogs].sort((a, b) => b.date - a.date);
 
             // Current streak (from today backwards)
             const today = new Date();
@@ -1533,7 +1570,13 @@
                 checkDate.setDate(checkDate.getDate() - i);
                 const log = habitLogs.find(l => formatDateKey(l.date) === formatDateKey(checkDate));
 
-                if (log && log.value >= habit.target) {
+                // For good habits: success = reached target
+                // For bad habits: success = 0 falls
+                const isSuccess = isGood
+                    ? (log && log.value >= habit.target)
+                    : (log && log.value === 0);
+
+                if (isSuccess) {
                     currentStreak++;
                 } else if (i > 0) {
                     break;
@@ -1543,7 +1586,11 @@
             // Best streak
             habitLogs.sort((a, b) => a.date - b.date);
             habitLogs.forEach((log, index) => {
-                if (log.value >= habit.target) {
+                const isSuccess = isGood
+                    ? log.value >= habit.target
+                    : log.value === 0;
+
+                if (isSuccess) {
                     tempStreak++;
                     if (tempStreak > bestStreak) bestStreak = tempStreak;
                 } else {
@@ -1567,6 +1614,7 @@
             let streak = 0;
             const today = new Date();
             today.setHours(0, 0, 0, 0);
+            const isGood = habit.type === 'good';
 
             for (let i = 0; i < 365; i++) {
                 const checkDate = new Date(today);
@@ -1574,7 +1622,11 @@
                 const key = getLogKey(checkDate, habit.id);
                 const value = logs[key] || 0;
 
-                if (value >= habit.target) {
+                // For good habits: success = reached target
+                // For bad habits: success = 0 falls
+                const isSuccess = isGood ? value >= habit.target : value === 0;
+
+                if (isSuccess) {
                     streak++;
                 } else if (i > 0) {
                     break;
@@ -1588,12 +1640,21 @@
             const days = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
             const result = [];
             const today = new Date();
+            const isGood = habit.type === 'good';
 
             for (let i = 6; i >= 0; i--) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
                 const value = getHabitLog(habit.id, date);
-                const percentage = Math.min((value / habit.target) * 100, 100);
+
+                // For good habits: higher value = higher bar
+                // For bad habits: 0 falls = full bar (success), more falls = smaller bar
+                let percentage;
+                if (isGood) {
+                    percentage = Math.min((value / habit.target) * 100, 100);
+                } else {
+                    percentage = value === 0 ? 100 : Math.max(0, 100 - (value / habit.target) * 100);
+                }
 
                 result.push({
                     label: days[date.getDay()],
