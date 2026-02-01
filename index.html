@@ -771,9 +771,18 @@
             background: linear-gradient(to top, var(--danger), var(--danger-light));
         }
 
+        .weekly-bar-fill.neutral {
+            background: var(--border);
+        }
+
         .weekly-bar-label {
             font-size: 0.7rem;
             color: var(--text-secondary);
+        }
+
+        .weekly-bar.today .weekly-bar-label {
+            color: var(--primary-light);
+            font-weight: 600;
         }
 
         /* Streak Badge */
@@ -1572,9 +1581,11 @@
 
         function initDateRange() {
             const today = new Date();
-            const monthAgo = new Date(today);
-            monthAgo.setMonth(monthAgo.getMonth() - 1);
-            statsDateRange.start = monthAgo;
+            today.setHours(23, 59, 59, 999);
+            // Current calendar month
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            monthStart.setHours(0, 0, 0, 0);
+            statsDateRange.start = monthStart;
             statsDateRange.end = today;
         }
 
@@ -1672,17 +1683,21 @@
                 btn.addEventListener('click', () => {
                     const preset = btn.dataset.preset;
                     const today = new Date();
+                    today.setHours(23, 59, 59, 999);
                     statsDateRange.preset = preset;
                     statsDateRange.end = today;
 
                     if (preset === 'week') {
-                        const weekAgo = new Date(today);
-                        weekAgo.setDate(weekAgo.getDate() - 7);
-                        statsDateRange.start = weekAgo;
+                        // Last 7 days (6 days ago + today = 7 days)
+                        const weekStart = new Date(today);
+                        weekStart.setDate(today.getDate() - 6);
+                        weekStart.setHours(0, 0, 0, 0);
+                        statsDateRange.start = weekStart;
                     } else if (preset === 'month') {
-                        const monthAgo = new Date(today);
-                        monthAgo.setMonth(monthAgo.getMonth() - 1);
-                        statsDateRange.start = monthAgo;
+                        // Current calendar month
+                        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                        monthStart.setHours(0, 0, 0, 0);
+                        statsDateRange.start = monthStart;
                     } else {
                         statsDateRange.start = null;
                     }
@@ -1769,12 +1784,13 @@
                         `}
                     </div>
                     <div class="weekly-chart">
-                        <div class="weekly-chart-title">📅 שבוע אחרון</div>
+                        <div class="weekly-chart-title">📅 השבוע הנוכחי</div>
                         <div class="weekly-bars">
                             ${weeklyData.map(day => `
-                                <div class="weekly-bar">
+                                <div class="weekly-bar ${day.isToday ? 'today' : ''}">
                                     <div class="weekly-bar-fill ${day.colorClass}"
-                                         style="height: ${day.percentage}%"></div>
+                                         style="height: ${day.hasLog ? Math.max(day.percentage, 10) : 5}%"
+                                         title="${day.hasLog ? (habit.type === 'bad' ? (day.value === 0 ? 'יום נקי' : day.value + ' נפילות') : day.value + ' ' + habit.unit) : 'לא מולא'}"></div>
                                     <div class="weekly-bar-label">${day.label}</div>
                                 </div>
                             `).join('')}
@@ -1830,14 +1846,23 @@
 
             // Calculate total days in range for ratio
             let totalDaysInRange = 0;
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+
             if (startDate && endDate) {
-                const diffTime = Math.abs(endDate - startDate);
-                totalDaysInRange = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                // Use the earlier of endDate or today (don't count future days)
+                const effectiveEnd = endDate > now ? now : endDate;
+                const start = new Date(startDate);
+                start.setHours(0, 0, 0, 0);
+                const end = new Date(effectiveEnd);
+                end.setHours(0, 0, 0, 0);
+                const diffTime = end - start;
+                totalDaysInRange = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
             } else if (habitLogs.length > 0) {
                 const firstLog = habitLogs[0].date;
-                const lastLog = habitLogs[habitLogs.length - 1].date;
-                const diffTime = Math.abs(lastLog - firstLog);
-                totalDaysInRange = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                const lastLog = habitLogs[habitLogs.length - 1].date > now ? now : habitLogs[habitLogs.length - 1].date;
+                const diffTime = lastLog - firstLog;
+                totalDaysInRange = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
             }
 
             const totalDays = habitLogs.length;
@@ -1850,32 +1875,44 @@
             const avgPerDay = totalDays > 0 ? (totalCount / totalDays).toFixed(1) : 0;
             const completionRate = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
 
-            // Calculate current streak (always from today backwards, not filtered)
+            // Calculate current streak (from today backwards, only counting logged days)
             let currentStreak = 0;
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const allLogs = getLogs();
 
-            for (let i = 0; i < 365; i++) {
-                const checkDate = new Date(today);
-                checkDate.setDate(checkDate.getDate() - i);
-                const key = getLogKey(checkDate, habit.id);
-                const value = allLogs[key];
-
-                // For bad habits: no log OR log with 0 = clean day = success
-                // For good habits: must have log with value >= target
-                let isSuccess;
-                if (isGood) {
-                    isSuccess = value !== undefined && value >= habit.target;
-                } else {
-                    // Bad habit: success if no log (didn't track = clean) or log is 0
-                    isSuccess = value === undefined || value === 0;
+            // Find the first logged day for this habit to know where to start counting
+            const allHabitLogs = [];
+            Object.keys(allLogs).forEach(key => {
+                if (key.endsWith(`_${habit.id}`)) {
+                    const dateStr = key.replace(`_${habit.id}`, '');
+                    allHabitLogs.push({
+                        date: new Date(dateStr),
+                        value: allLogs[key]
+                    });
                 }
+            });
 
-                if (isSuccess) {
-                    currentStreak++;
-                } else {
-                    break;
+            if (allHabitLogs.length > 0) {
+                // Sort by date descending (newest first)
+                allHabitLogs.sort((a, b) => b.date - a.date);
+
+                // Only count from today backwards, skip future dates
+                for (const log of allHabitLogs) {
+                    // Skip future dates
+                    if (log.date > today) continue;
+
+                    // For bad habits: success = log with value 0
+                    // For good habits: success = log with value >= target
+                    const isSuccess = isGood
+                        ? log.value >= habit.target
+                        : log.value === 0;
+
+                    if (isSuccess) {
+                        currentStreak++;
+                    } else {
+                        break;
+                    }
                 }
             }
 
@@ -1916,21 +1953,31 @@
             today.setHours(0, 0, 0, 0);
             const isGood = habit.type === 'good';
 
-            for (let i = 0; i < 365; i++) {
-                const checkDate = new Date(today);
-                checkDate.setDate(checkDate.getDate() - i);
-                const key = getLogKey(checkDate, habit.id);
-                const value = logs[key];
-
-                // For bad habits: no log OR log with 0 = clean day = success
-                // For good habits: must have log with value >= target
-                let isSuccess;
-                if (isGood) {
-                    isSuccess = value !== undefined && value >= habit.target;
-                } else {
-                    // Bad habit: success if no log (clean) or log is 0
-                    isSuccess = value === undefined || value === 0;
+            // Get all logs for this habit
+            const habitLogs = [];
+            Object.keys(logs).forEach(key => {
+                if (key.endsWith(`_${habit.id}`)) {
+                    const dateStr = key.replace(`_${habit.id}`, '');
+                    habitLogs.push({
+                        date: new Date(dateStr),
+                        value: logs[key]
+                    });
                 }
+            });
+
+            if (habitLogs.length === 0) return 0;
+
+            // Sort by date descending (newest first)
+            habitLogs.sort((a, b) => b.date - a.date);
+
+            // Count streak from today backwards, skipping future dates
+            for (const log of habitLogs) {
+                // Skip future dates
+                if (log.date > today) continue;
+
+                const isSuccess = isGood
+                    ? log.value >= habit.target
+                    : log.value === 0;
 
                 if (isSuccess) {
                     streak++;
@@ -1962,18 +2009,31 @@
 
                 // Get value directly from logs
                 const key = getLogKey(date, habit.id);
+                const hasLog = logs[key] !== undefined;
                 const value = logs[key] || 0;
 
                 let percentage, colorClass;
-                if (isGood) {
+                const isFuture = date > today;
+
+                if (isFuture) {
+                    // Future days - grey/empty
+                    percentage = 0;
+                    colorClass = 'neutral';
+                } else if (isGood) {
                     // Good habit: green when reaching target
-                    percentage = Math.min((value / habit.target) * 100, 100);
-                    colorClass = value >= habit.target ? 'good' : 'bad';
+                    percentage = hasLog ? Math.min((value / habit.target) * 100, 100) : 0;
+                    colorClass = (hasLog && value >= habit.target) ? 'good' : 'bad';
                 } else {
-                    // Bad habit: green for clean day (0), red for falls
-                    const isClean = value === 0;
-                    percentage = isClean ? 100 : Math.max(20, 100 - (value * 20));
-                    colorClass = isClean ? 'good' : 'bad';
+                    // Bad habit: only show data if there's a log
+                    if (hasLog) {
+                        const isClean = value === 0;
+                        percentage = isClean ? 100 : Math.max(20, 100 - (value * 20));
+                        colorClass = isClean ? 'good' : 'bad';
+                    } else {
+                        // No log for this day - show empty
+                        percentage = 0;
+                        colorClass = 'neutral';
+                    }
                 }
 
                 result.push({
@@ -1981,6 +2041,7 @@
                     value,
                     percentage,
                     colorClass,
+                    hasLog,
                     isToday: formatDateKey(date) === formatDateKey(new Date())
                 });
             }
