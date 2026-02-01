@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מעקב הרגלים | Habit Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --success-light: #34d399;
+            --danger: #ef4444;
+            --danger-light: #f87171;
+            --warning: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+            --shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-top: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .nav-tab:hover {
+            border-color: var(--primary);
+            color: var(--primary-light);
+        }
+
+        .nav-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Section */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Date Navigation */
+        .date-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border-radius: 16px;
+        }
+
+        .date-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .date-btn:hover {
+            background: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .current-date {
+            font-size: 1.3rem;
+            font-weight: 600;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .today-btn {
+            padding: 0.5rem 1rem;
+            background: var(--primary);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .today-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Add Habit Button */
+        .add-habit-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--bg-card-hover), var(--bg-card));
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .add-habit-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary-light);
+            background: var(--bg-card-hover);
+        }
+
+        .add-habit-btn span {
+            font-size: 1.5rem;
+        }
+
+        /* Habits Grid */
+        .habits-section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .habits-section-title.good {
+            color: var(--success);
+        }
+
+        .habits-section-title.bad {
+            color: var(--danger);
+        }
+
+        .habits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Habit Card */
+        .habit-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.25rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .habit-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+            border-color: var(--primary);
+        }
+
+        .habit-card.good {
+            border-right: 4px solid var(--success);
+        }
+
+        .habit-card.bad {
+            border-right: 4px solid var(--danger);
+        }
+
+        .habit-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .habit-info h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .habit-info p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .habit-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .habit-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: var(--bg-card-hover);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .habit-action-btn:hover {
+            background: var(--border);
+            color: var(--text-primary);
+        }
+
+        .habit-action-btn.delete:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Counter Controls */
+        .counter-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: var(--bg-card-hover);
+            border-radius: 12px;
+        }
+
+        .counter-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .counter-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+
+        .counter-btn.minus {
+            background: var(--danger);
+            color: white;
+        }
+
+        .counter-btn.minus:hover {
+            background: var(--danger-light);
+            transform: scale(1.1);
+        }
+
+        .counter-btn.plus {
+            background: var(--success);
+            color: white;
+        }
+
+        .counter-btn.plus:hover {
+            background: var(--success-light);
+            transform: scale(1.1);
+        }
+
+        .counter-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .counter-target {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .counter-target span {
+            color: var(--primary-light);
+            font-weight: 600;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 1rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-dark);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.good {
+            background: linear-gradient(90deg, var(--success), var(--success-light));
+        }
+
+        .progress-fill.bad {
+            background: linear-gradient(90deg, var(--danger), var(--danger-light));
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--danger);
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: var(--bg-dark);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* Habit Type Toggle */
+        .type-toggle {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .type-option {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .type-option:hover {
+            border-color: var(--text-secondary);
+        }
+
+        .type-option.good.selected {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .type-option.bad.selected {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .type-option-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .type-option-label {
+            font-weight: 500;
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Statistics Section */
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Habit Stats List */
+        .habit-stats-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .habit-stat-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .habit-stat-card:hover {
+            border-color: var(--primary);
+        }
+
+        .habit-stat-card.good {
+            border-right: 4px solid var(--success);
+        }
+
+        .habit-stat-card.bad {
+            border-right: 4px solid var(--danger);
+        }
+
+        .habit-stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .habit-stat-header h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .habit-stat-badges {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .habit-stat-type {
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .habit-stat-type.good {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .habit-stat-type.bad {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .habit-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .habit-stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--bg-card-hover);
+            border-radius: 12px;
+        }
+
+        .habit-stat-item-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-light);
+        }
+
+        .habit-stat-item-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* Weekly Chart */
+        .weekly-chart {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg-card-hover);
+            border-radius: 12px;
+        }
+
+        .weekly-chart-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+        }
+
+        .weekly-bars {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            height: 80px;
+            gap: 0.5rem;
+        }
+
+        .weekly-bar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .weekly-bar-fill {
+            width: 100%;
+            max-width: 40px;
+            border-radius: 4px 4px 0 0;
+            transition: height 0.3s ease;
+        }
+
+        .weekly-bar-fill.good {
+            background: linear-gradient(to top, var(--success), var(--success-light));
+        }
+
+        .weekly-bar-fill.bad {
+            background: linear-gradient(to top, var(--danger), var(--danger-light));
+        }
+
+        .weekly-bar-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        /* Streak Badge */
+        .streak-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.75rem;
+            background: linear-gradient(135deg, var(--warning), #fbbf24);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #000;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .habits-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .date-nav {
+                flex-wrap: wrap;
+            }
+
+            .current-date {
+                order: -1;
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes checkmark {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .completed .counter-value {
+            animation: checkmark 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🎯 מעקב הרגלים</h1>
+        <p>בנה הרגלים טובים, שבור הרגלים רעים</p>
+    </header>
+
+    <nav class="nav-tabs">
+        <button class="nav-tab active" data-tab="daily">📅 יומי</button>
+        <button class="nav-tab" data-tab="habits">📝 ניהול הרגלים</button>
+        <button class="nav-tab" data-tab="stats">📊 סטטיסטיקות</button>
+    </nav>
+
+    <main class="container">
+        <!-- Daily Section -->
+        <section id="daily" class="section active">
+            <div class="date-nav">
+                <button class="date-btn" id="prevDay">→</button>
+                <span class="current-date" id="currentDate"></span>
+                <button class="date-btn" id="nextDay">←</button>
+                <button class="today-btn" id="todayBtn">היום</button>
+            </div>
+
+            <div id="dailyHabits">
+                <!-- Habits will be rendered here -->
+            </div>
+        </section>
+
+        <!-- Habits Management Section -->
+        <section id="habits" class="section">
+            <button class="add-habit-btn" id="addHabitBtn">
+                <span>+</span>
+                הוסף הרגל חדש
+            </button>
+
+            <div id="habitsManagement">
+                <!-- Habits list will be rendered here -->
+            </div>
+        </section>
+
+        <!-- Statistics Section -->
+        <section id="stats" class="section">
+            <div class="stats-overview" id="statsOverview">
+                <!-- Overview stats will be rendered here -->
+            </div>
+
+            <h2 class="habits-section-title">📈 סטטיסטיקות לפי הרגל</h2>
+            <div class="habit-stats-list" id="habitStatsList">
+                <!-- Habit stats will be rendered here -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Add/Edit Habit Modal -->
+    <div class="modal-overlay" id="habitModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">הוסף הרגל חדש</h2>
+                <button class="modal-close" id="closeModal">×</button>
+            </div>
+
+            <form id="habitForm">
+                <div class="type-toggle">
+                    <div class="type-option good selected" data-type="good">
+                        <div class="type-option-icon">✅</div>
+                        <div class="type-option-label">הרגל טוב</div>
+                    </div>
+                    <div class="type-option bad" data-type="bad">
+                        <div class="type-option-icon">❌</div>
+                        <div class="type-option-label">הרגל רע</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>שם ההרגל *</label>
+                    <input type="text" id="habitName" required placeholder="לדוגמה: שתיית מים">
+                </div>
+
+                <div class="form-group">
+                    <label>תיאור (אופציונלי)</label>
+                    <textarea id="habitDescription" placeholder="תיאור קצר של ההרגל..."></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>יעד יומי</label>
+                        <input type="number" id="habitTarget" min="1" value="1" placeholder="1">
+                    </div>
+                    <div class="form-group">
+                        <label>יחידה</label>
+                        <input type="text" id="habitUnit" placeholder="פעמים / כוסות / דקות">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>אייקון</label>
+                    <select id="habitIcon">
+                        <option value="💧">💧 מים</option>
+                        <option value="🏃">🏃 ספורט</option>
+                        <option value="📚">📚 קריאה</option>
+                        <option value="🧘">🧘 מדיטציה</option>
+                        <option value="💪">💪 אימון</option>
+                        <option value="🥗">🥗 אכילה בריאה</option>
+                        <option value="😴">😴 שינה</option>
+                        <option value="📱">📱 מסכים</option>
+                        <option value="🚬">🚬 עישון</option>
+                        <option value="🍫">🍫 ממתקים</option>
+                        <option value="☕">☕ קפה</option>
+                        <option value="🎯">🎯 יעד</option>
+                        <option value="✨">✨ כללי</option>
+                        <option value="🌅">🌅 בוקר</option>
+                        <option value="🌙">🌙 ערב</option>
+                        <option value="💊">💊 תרופות</option>
+                        <option value="🦷">🦷 צחצוח שיניים</option>
+                        <option value="🎸">🎸 תחביב</option>
+                        <option value="💻">💻 לימודים</option>
+                        <option value="🚶">🚶 הליכה</option>
+                    </select>
+                </div>
+
+                <input type="hidden" id="habitId">
+                <button type="submit" class="submit-btn">שמור הרגל</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ==================== Data Management ====================
+        const STORAGE_KEYS = {
+            HABITS: 'habitTracker_habits',
+            LOGS: 'habitTracker_logs'
+        };
+
+        // Initialize data
+        function getHabits() {
+            const data = localStorage.getItem(STORAGE_KEYS.HABITS);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveHabits(habits) {
+            localStorage.setItem(STORAGE_KEYS.HABITS, JSON.stringify(habits));
+        }
+
+        function getLogs() {
+            const data = localStorage.getItem(STORAGE_KEYS.LOGS);
+            return data ? JSON.parse(data) : {};
+        }
+
+        function saveLogs(logs) {
+            localStorage.setItem(STORAGE_KEYS.LOGS, JSON.stringify(logs));
+        }
+
+        function getLogKey(date, habitId) {
+            return `${formatDateKey(date)}_${habitId}`;
+        }
+
+        function formatDateKey(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function formatDateDisplay(date) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('he-IL', options);
+        }
+
+        function isToday(date) {
+            const today = new Date();
+            return formatDateKey(date) === formatDateKey(today);
+        }
+
+        // ==================== State ====================
+        let currentDate = new Date();
+        let editingHabitId = null;
+
+        // ==================== DOM Elements ====================
+        const elements = {
+            tabs: document.querySelectorAll('.nav-tab'),
+            sections: document.querySelectorAll('.section'),
+            currentDate: document.getElementById('currentDate'),
+            prevDay: document.getElementById('prevDay'),
+            nextDay: document.getElementById('nextDay'),
+            todayBtn: document.getElementById('todayBtn'),
+            dailyHabits: document.getElementById('dailyHabits'),
+            habitsManagement: document.getElementById('habitsManagement'),
+            statsOverview: document.getElementById('statsOverview'),
+            habitStatsList: document.getElementById('habitStatsList'),
+            addHabitBtn: document.getElementById('addHabitBtn'),
+            habitModal: document.getElementById('habitModal'),
+            closeModal: document.getElementById('closeModal'),
+            habitForm: document.getElementById('habitForm'),
+            modalTitle: document.getElementById('modalTitle'),
+            typeOptions: document.querySelectorAll('.type-option'),
+            habitId: document.getElementById('habitId'),
+            habitName: document.getElementById('habitName'),
+            habitDescription: document.getElementById('habitDescription'),
+            habitTarget: document.getElementById('habitTarget'),
+            habitUnit: document.getElementById('habitUnit'),
+            habitIcon: document.getElementById('habitIcon')
+        };
+
+        // ==================== Event Listeners ====================
+        // Tab navigation
+        elements.tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.dataset.tab;
+                switchTab(tabId);
+            });
+        });
+
+        // Date navigation
+        elements.prevDay.addEventListener('click', () => changeDate(-1));
+        elements.nextDay.addEventListener('click', () => changeDate(1));
+        elements.todayBtn.addEventListener('click', () => {
+            currentDate = new Date();
+            updateDateDisplay();
+            renderDailyHabits();
+        });
+
+        // Modal
+        elements.addHabitBtn.addEventListener('click', () => openModal());
+        elements.closeModal.addEventListener('click', () => closeModal());
+        elements.habitModal.addEventListener('click', (e) => {
+            if (e.target === elements.habitModal) closeModal();
+        });
+
+        // Type toggle
+        elements.typeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                elements.typeOptions.forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+            });
+        });
+
+        // Form submission
+        elements.habitForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveHabit();
+        });
+
+        // ==================== Functions ====================
+        function switchTab(tabId) {
+            elements.tabs.forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === tabId);
+            });
+            elements.sections.forEach(section => {
+                section.classList.toggle('active', section.id === tabId);
+            });
+
+            if (tabId === 'daily') renderDailyHabits();
+            if (tabId === 'habits') renderHabitsManagement();
+            if (tabId === 'stats') renderStatistics();
+        }
+
+        function changeDate(delta) {
+            currentDate.setDate(currentDate.getDate() + delta);
+            updateDateDisplay();
+            renderDailyHabits();
+        }
+
+        function updateDateDisplay() {
+            elements.currentDate.textContent = formatDateDisplay(currentDate);
+            elements.todayBtn.style.display = isToday(currentDate) ? 'none' : 'block';
+        }
+
+        function openModal(habit = null) {
+            editingHabitId = habit ? habit.id : null;
+            elements.modalTitle.textContent = habit ? 'ערוך הרגל' : 'הוסף הרגל חדש';
+
+            if (habit) {
+                elements.habitName.value = habit.name;
+                elements.habitDescription.value = habit.description || '';
+                elements.habitTarget.value = habit.target || 1;
+                elements.habitUnit.value = habit.unit || '';
+                elements.habitIcon.value = habit.icon || '✨';
+
+                elements.typeOptions.forEach(o => {
+                    o.classList.toggle('selected', o.dataset.type === habit.type);
+                });
+            } else {
+                elements.habitForm.reset();
+                elements.habitTarget.value = 1;
+                elements.typeOptions.forEach(o => {
+                    o.classList.toggle('selected', o.dataset.type === 'good');
+                });
+            }
+
+            elements.habitModal.classList.add('active');
+        }
+
+        function closeModal() {
+            elements.habitModal.classList.remove('active');
+            editingHabitId = null;
+        }
+
+        function saveHabit() {
+            const habits = getHabits();
+            const selectedType = document.querySelector('.type-option.selected').dataset.type;
+
+            const habitData = {
+                id: editingHabitId || Date.now().toString(),
+                name: elements.habitName.value.trim(),
+                description: elements.habitDescription.value.trim(),
+                type: selectedType,
+                target: parseInt(elements.habitTarget.value) || 1,
+                unit: elements.habitUnit.value.trim() || 'פעמים',
+                icon: elements.habitIcon.value,
+                createdAt: editingHabitId ?
+                    habits.find(h => h.id === editingHabitId)?.createdAt :
+                    new Date().toISOString()
+            };
+
+            if (editingHabitId) {
+                const index = habits.findIndex(h => h.id === editingHabitId);
+                if (index !== -1) habits[index] = habitData;
+            } else {
+                habits.push(habitData);
+            }
+
+            saveHabits(habits);
+            closeModal();
+            renderDailyHabits();
+            renderHabitsManagement();
+        }
+
+        function deleteHabit(habitId) {
+            if (!confirm('האם אתה בטוח שברצונך למחוק את ההרגל הזה?')) return;
+
+            const habits = getHabits().filter(h => h.id !== habitId);
+            saveHabits(habits);
+
+            // Also clean up logs for this habit
+            const logs = getLogs();
+            Object.keys(logs).forEach(key => {
+                if (key.endsWith(`_${habitId}`)) {
+                    delete logs[key];
+                }
+            });
+            saveLogs(logs);
+
+            renderDailyHabits();
+            renderHabitsManagement();
+            renderStatistics();
+        }
+
+        function updateHabitLog(habitId, value) {
+            const logs = getLogs();
+            const key = getLogKey(currentDate, habitId);
+            logs[key] = Math.max(0, value);
+            saveLogs(logs);
+            renderDailyHabits();
+        }
+
+        function getHabitLog(habitId, date = currentDate) {
+            const logs = getLogs();
+            const key = getLogKey(date, habitId);
+            return logs[key] || 0;
+        }
+
+        // ==================== Rendering ====================
+        function renderDailyHabits() {
+            const habits = getHabits();
+            const goodHabits = habits.filter(h => h.type === 'good');
+            const badHabits = habits.filter(h => h.type === 'bad');
+
+            if (habits.length === 0) {
+                elements.dailyHabits.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <h3>אין הרגלים עדיין</h3>
+                        <p>לחץ על "ניהול הרגלים" כדי להוסיף את ההרגל הראשון שלך</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+
+            if (goodHabits.length > 0) {
+                html += `<h2 class="habits-section-title good">✅ הרגלים טובים</h2>`;
+                html += `<div class="habits-grid">`;
+                goodHabits.forEach(habit => {
+                    html += renderHabitCard(habit);
+                });
+                html += `</div>`;
+            }
+
+            if (badHabits.length > 0) {
+                html += `<h2 class="habits-section-title bad">❌ הרגלים רעים</h2>`;
+                html += `<div class="habits-grid">`;
+                badHabits.forEach(habit => {
+                    html += renderHabitCard(habit);
+                });
+                html += `</div>`;
+            }
+
+            elements.dailyHabits.innerHTML = html;
+
+            // Add event listeners for counter buttons
+            document.querySelectorAll('.counter-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const habitId = btn.dataset.habit;
+                    const action = btn.dataset.action;
+                    const currentValue = getHabitLog(habitId);
+                    const newValue = action === 'plus' ? currentValue + 1 : currentValue - 1;
+                    updateHabitLog(habitId, newValue);
+                });
+            });
+        }
+
+        function renderHabitCard(habit) {
+            const currentValue = getHabitLog(habit.id);
+            const progress = Math.min((currentValue / habit.target) * 100, 100);
+            const isCompleted = currentValue >= habit.target;
+            const isGood = habit.type === 'good';
+
+            return `
+                <div class="habit-card ${habit.type} ${isCompleted ? 'completed' : ''}">
+                    <div class="habit-card-header">
+                        <div class="habit-info">
+                            <h3>${habit.icon} ${habit.name}</h3>
+                            ${habit.description ? `<p>${habit.description}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="counter-section">
+                        <div class="counter-controls">
+                            <button class="counter-btn minus" data-habit="${habit.id}" data-action="minus">−</button>
+                            <span class="counter-value">${currentValue}</span>
+                            <button class="counter-btn plus" data-habit="${habit.id}" data-action="plus">+</button>
+                        </div>
+                        <div class="counter-target">
+                            יעד: <span>${habit.target} ${habit.unit}</span>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill ${habit.type}" style="width: ${progress}%"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span>${currentValue} / ${habit.target} ${habit.unit}</span>
+                            <span>${Math.round(progress)}%</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderHabitsManagement() {
+            const habits = getHabits();
+            const goodHabits = habits.filter(h => h.type === 'good');
+            const badHabits = habits.filter(h => h.type === 'bad');
+
+            if (habits.length === 0) {
+                elements.habitsManagement.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎯</div>
+                        <h3>בוא נתחיל!</h3>
+                        <p>לחץ על הכפתור למעלה כדי להוסיף את ההרגל הראשון שלך</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+
+            if (goodHabits.length > 0) {
+                html += `<h2 class="habits-section-title good">✅ הרגלים טובים (${goodHabits.length})</h2>`;
+                html += `<div class="habits-grid">`;
+                goodHabits.forEach(habit => {
+                    html += renderManagementCard(habit);
+                });
+                html += `</div>`;
+            }
+
+            if (badHabits.length > 0) {
+                html += `<h2 class="habits-section-title bad">❌ הרגלים רעים (${badHabits.length})</h2>`;
+                html += `<div class="habits-grid">`;
+                badHabits.forEach(habit => {
+                    html += renderManagementCard(habit);
+                });
+                html += `</div>`;
+            }
+
+            elements.habitsManagement.innerHTML = html;
+
+            // Add event listeners
+            document.querySelectorAll('.edit-habit-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const habit = habits.find(h => h.id === btn.dataset.habit);
+                    if (habit) openModal(habit);
+                });
+            });
+
+            document.querySelectorAll('.delete-habit-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    deleteHabit(btn.dataset.habit);
+                });
+            });
+        }
+
+        function renderManagementCard(habit) {
+            return `
+                <div class="habit-card ${habit.type}">
+                    <div class="habit-card-header">
+                        <div class="habit-info">
+                            <h3>${habit.icon} ${habit.name}</h3>
+                            <p>${habit.description || `יעד: ${habit.target} ${habit.unit} ביום`}</p>
+                        </div>
+                        <div class="habit-actions">
+                            <button class="habit-action-btn edit-habit-btn" data-habit="${habit.id}" title="ערוך">✏️</button>
+                            <button class="habit-action-btn delete delete-habit-btn" data-habit="${habit.id}" title="מחק">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStatistics() {
+            const habits = getHabits();
+            const logs = getLogs();
+
+            // Calculate overall statistics
+            const totalHabits = habits.length;
+            const goodHabits = habits.filter(h => h.type === 'good').length;
+            const badHabits = habits.filter(h => h.type === 'bad').length;
+
+            // Calculate today's completion
+            const today = new Date();
+            let todayCompleted = 0;
+            habits.forEach(habit => {
+                const value = getHabitLog(habit.id, today);
+                if (value >= habit.target) todayCompleted++;
+            });
+
+            // Calculate streak for good habits
+            let maxStreak = 0;
+            habits.filter(h => h.type === 'good').forEach(habit => {
+                const streak = calculateStreak(habit);
+                if (streak > maxStreak) maxStreak = streak;
+            });
+
+            elements.statsOverview.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value">${totalHabits}</div>
+                    <div class="stat-label">סה"כ הרגלים</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-value">${goodHabits}</div>
+                    <div class="stat-label">הרגלים טובים</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">❌</div>
+                    <div class="stat-value">${badHabits}</div>
+                    <div class="stat-label">הרגלים רעים</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-value">${todayCompleted}/${totalHabits}</div>
+                    <div class="stat-label">הושלמו היום</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-value">${maxStreak}</div>
+                    <div class="stat-label">רצף מקסימלי</div>
+                </div>
+            `;
+
+            // Render individual habit statistics
+            if (habits.length === 0) {
+                elements.habitStatsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📈</div>
+                        <h3>אין נתונים עדיין</h3>
+                        <p>הוסף הרגלים והתחל לעקוב אחריהם כדי לראות סטטיסטיקות</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let statsHtml = '';
+            habits.forEach(habit => {
+                statsHtml += renderHabitStats(habit);
+            });
+            elements.habitStatsList.innerHTML = statsHtml;
+        }
+
+        function renderHabitStats(habit) {
+            const stats = calculateHabitStats(habit);
+            const weeklyData = getWeeklyData(habit);
+
+            return `
+                <div class="habit-stat-card ${habit.type}">
+                    <div class="habit-stat-header">
+                        <h3>${habit.icon} ${habit.name}</h3>
+                        <div class="habit-stat-badges">
+                            <span class="habit-stat-type ${habit.type}">
+                                ${habit.type === 'good' ? 'הרגל טוב' : 'הרגל רע'}
+                            </span>
+                            ${stats.currentStreak > 0 && habit.type === 'good' ?
+                                `<span class="streak-badge">🔥 ${stats.currentStreak} ימים</span>` :
+                                ''}
+                        </div>
+                    </div>
+                    <div class="habit-stat-grid">
+                        <div class="habit-stat-item">
+                            <div class="habit-stat-item-value">${stats.totalDays}</div>
+                            <div class="habit-stat-item-label">ימי מעקב</div>
+                        </div>
+                        <div class="habit-stat-item">
+                            <div class="habit-stat-item-value">${stats.completedDays}</div>
+                            <div class="habit-stat-item-label">ימים שהושלמו</div>
+                        </div>
+                        <div class="habit-stat-item">
+                            <div class="habit-stat-item-value">${stats.completionRate}%</div>
+                            <div class="habit-stat-item-label">אחוז הצלחה</div>
+                        </div>
+                        <div class="habit-stat-item">
+                            <div class="habit-stat-item-value">${stats.totalCount}</div>
+                            <div class="habit-stat-item-label">סה"כ ${habit.unit}</div>
+                        </div>
+                        <div class="habit-stat-item">
+                            <div class="habit-stat-item-value">${stats.avgPerDay}</div>
+                            <div class="habit-stat-item-label">ממוצע יומי</div>
+                        </div>
+                        <div class="habit-stat-item">
+                            <div class="habit-stat-item-value">${stats.bestStreak}</div>
+                            <div class="habit-stat-item-label">רצף מקסימלי</div>
+                        </div>
+                    </div>
+                    <div class="weekly-chart">
+                        <div class="weekly-chart-title">📅 שבוע אחרון</div>
+                        <div class="weekly-bars">
+                            ${weeklyData.map(day => `
+                                <div class="weekly-bar">
+                                    <div class="weekly-bar-fill ${habit.type}"
+                                         style="height: ${day.percentage}%"></div>
+                                    <div class="weekly-bar-label">${day.label}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function calculateHabitStats(habit) {
+            const logs = getLogs();
+            const habitLogs = [];
+
+            Object.keys(logs).forEach(key => {
+                if (key.endsWith(`_${habit.id}`)) {
+                    const dateStr = key.replace(`_${habit.id}`, '');
+                    habitLogs.push({
+                        date: new Date(dateStr),
+                        value: logs[key]
+                    });
+                }
+            });
+
+            habitLogs.sort((a, b) => a.date - b.date);
+
+            const totalDays = habitLogs.length;
+            const completedDays = habitLogs.filter(l => l.value >= habit.target).length;
+            const totalCount = habitLogs.reduce((sum, l) => sum + l.value, 0);
+            const avgPerDay = totalDays > 0 ? (totalCount / totalDays).toFixed(1) : 0;
+            const completionRate = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
+
+            // Calculate streaks
+            let currentStreak = 0;
+            let bestStreak = 0;
+            let tempStreak = 0;
+
+            // Sort by date descending for current streak
+            const sortedLogs = [...habitLogs].sort((a, b) => b.date - a.date);
+
+            // Current streak (from today backwards)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            for (let i = 0; i < 365; i++) {
+                const checkDate = new Date(today);
+                checkDate.setDate(checkDate.getDate() - i);
+                const log = habitLogs.find(l => formatDateKey(l.date) === formatDateKey(checkDate));
+
+                if (log && log.value >= habit.target) {
+                    currentStreak++;
+                } else if (i > 0) {
+                    break;
+                }
+            }
+
+            // Best streak
+            habitLogs.sort((a, b) => a.date - b.date);
+            habitLogs.forEach((log, index) => {
+                if (log.value >= habit.target) {
+                    tempStreak++;
+                    if (tempStreak > bestStreak) bestStreak = tempStreak;
+                } else {
+                    tempStreak = 0;
+                }
+            });
+
+            return {
+                totalDays,
+                completedDays,
+                totalCount,
+                avgPerDay,
+                completionRate,
+                currentStreak,
+                bestStreak
+            };
+        }
+
+        function calculateStreak(habit) {
+            const logs = getLogs();
+            let streak = 0;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            for (let i = 0; i < 365; i++) {
+                const checkDate = new Date(today);
+                checkDate.setDate(checkDate.getDate() - i);
+                const key = getLogKey(checkDate, habit.id);
+                const value = logs[key] || 0;
+
+                if (value >= habit.target) {
+                    streak++;
+                } else if (i > 0) {
+                    break;
+                }
+            }
+
+            return streak;
+        }
+
+        function getWeeklyData(habit) {
+            const days = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+            const result = [];
+            const today = new Date();
+
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const value = getHabitLog(habit.id, date);
+                const percentage = Math.min((value / habit.target) * 100, 100);
+
+                result.push({
+                    label: days[date.getDay()],
+                    value,
+                    percentage
+                });
+            }
+
+            return result;
+        }
+
+        // ==================== Initialize ====================
+        function init() {
+            updateDateDisplay();
+            renderDailyHabits();
+        }
+
+        init();
+    </script>
+</body>
+</html>
