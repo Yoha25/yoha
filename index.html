@@ -789,6 +789,79 @@
             color: #000;
         }
 
+        /* Milestones */
+        .milestones-section {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-card-hover);
+            border-radius: 12px;
+        }
+
+        .milestones-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .milestones-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .milestone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            background: var(--bg-dark);
+            border: 2px solid var(--border);
+            min-width: 70px;
+            transition: all 0.3s ease;
+        }
+
+        .milestone.achieved {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.15);
+        }
+
+        .milestone.current {
+            border-color: var(--warning);
+            background: rgba(245, 158, 11, 0.15);
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+        }
+
+        .milestone-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .milestone-days {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .milestone-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .milestone.achieved .milestone-days {
+            color: var(--success);
+        }
+
+        .milestone.current .milestone-days {
+            color: var(--warning);
+        }
+
         /* Empty State */
         .empty-state {
             text-align: center;
@@ -1488,42 +1561,81 @@
                         </div>
                     </div>
                     <div class="habit-stat-grid">
-                        <div class="habit-stat-item">
-                            <div class="habit-stat-item-value">${stats.totalDays}</div>
-                            <div class="habit-stat-item-label">ימי מעקב</div>
-                        </div>
-                        <div class="habit-stat-item">
-                            <div class="habit-stat-item-value">${stats.completedDays}</div>
-                            <div class="habit-stat-item-label">${habit.type === 'good' ? 'ימים שהושלמו' : 'ימים נקיים'}</div>
-                        </div>
-                        <div class="habit-stat-item">
-                            <div class="habit-stat-item-value">${stats.completionRate}%</div>
-                            <div class="habit-stat-item-label">אחוז הצלחה</div>
-                        </div>
-                        <div class="habit-stat-item">
-                            <div class="habit-stat-item-value">${stats.totalCount}</div>
-                            <div class="habit-stat-item-label">${habit.type === 'good' ? `סה"כ ${habit.unit}` : 'סה"כ נפילות'}</div>
-                        </div>
-                        <div class="habit-stat-item">
-                            <div class="habit-stat-item-value">${stats.avgPerDay}</div>
-                            <div class="habit-stat-item-label">${habit.type === 'good' ? 'ממוצע יומי' : 'ממוצע נפילות יומי'}</div>
-                        </div>
-                        <div class="habit-stat-item">
-                            <div class="habit-stat-item-value">${stats.bestStreak}</div>
-                            <div class="habit-stat-item-label">${habit.type === 'good' ? 'רצף מקסימלי' : 'רצף נקי מקסימלי'}</div>
-                        </div>
+                        ${habit.type === 'good' ? `
+                            <div class="habit-stat-item">
+                                <div class="habit-stat-item-value">${stats.totalDays}</div>
+                                <div class="habit-stat-item-label">ימי מעקב</div>
+                            </div>
+                            <div class="habit-stat-item">
+                                <div class="habit-stat-item-value">${stats.completedDays}</div>
+                                <div class="habit-stat-item-label">ימים שהושלמו</div>
+                            </div>
+                            <div class="habit-stat-item">
+                                <div class="habit-stat-item-value">${stats.completionRate}%</div>
+                                <div class="habit-stat-item-label">אחוז הצלחה</div>
+                            </div>
+                            <div class="habit-stat-item">
+                                <div class="habit-stat-item-value">${stats.totalCount}</div>
+                                <div class="habit-stat-item-label">סה"כ ${habit.unit}</div>
+                            </div>
+                            <div class="habit-stat-item">
+                                <div class="habit-stat-item-value">${stats.avgPerDay}</div>
+                                <div class="habit-stat-item-label">ממוצע יומי</div>
+                            </div>
+                            <div class="habit-stat-item">
+                                <div class="habit-stat-item-value">${stats.bestStreak}</div>
+                                <div class="habit-stat-item-label">רצף מקסימלי</div>
+                            </div>
+                        ` : `
+                            <div class="habit-stat-item">
+                                <div class="habit-stat-item-value">${stats.currentStreak}</div>
+                                <div class="habit-stat-item-label">🔥 רצף נוכחי</div>
+                            </div>
+                            <div class="habit-stat-item">
+                                <div class="habit-stat-item-value">${stats.bestStreak}</div>
+                                <div class="habit-stat-item-label">🏆 שיא אישי</div>
+                            </div>
+                            <div class="habit-stat-item">
+                                <div class="habit-stat-item-value">${stats.completedDays}</div>
+                                <div class="habit-stat-item-label">✅ ימים נקיים</div>
+                            </div>
+                            <div class="habit-stat-item">
+                                <div class="habit-stat-item-value">${stats.totalCount}</div>
+                                <div class="habit-stat-item-label">😔 סה"כ נפילות</div>
+                            </div>
+                        `}
                     </div>
                     <div class="weekly-chart">
                         <div class="weekly-chart-title">📅 שבוע אחרון</div>
                         <div class="weekly-bars">
                             ${weeklyData.map(day => `
                                 <div class="weekly-bar">
-                                    <div class="weekly-bar-fill ${habit.type}"
+                                    <div class="weekly-bar-fill ${day.colorClass}"
                                          style="height: ${day.percentage}%"></div>
                                     <div class="weekly-bar-label">${day.label}</div>
                                 </div>
                             `).join('')}
                         </div>
+                    </div>
+                    ${habit.type === 'bad' ? renderMilestones(stats.currentStreak, stats.bestStreak) : ''}
+                </div>
+            `;
+        }
+
+        function renderMilestones(currentStreak, bestStreak) {
+            const milestones = getMilestoneStatus(currentStreak, bestStreak);
+
+            return `
+                <div class="milestones-section">
+                    <div class="milestones-title">🏅 אבני דרך - ימים נקיים ברצף</div>
+                    <div class="milestones-grid">
+                        ${milestones.map(m => `
+                            <div class="milestone ${m.status}">
+                                <span class="milestone-icon">${m.icon}</span>
+                                <span class="milestone-days">${m.days}</span>
+                                <span class="milestone-label">ימים</span>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `;
@@ -1647,23 +1759,51 @@
                 date.setDate(date.getDate() - i);
                 const value = getHabitLog(habit.id, date);
 
-                // For good habits: higher value = higher bar
-                // For bad habits: 0 falls = full bar (success), more falls = smaller bar
-                let percentage;
+                let percentage, colorClass;
                 if (isGood) {
+                    // Good habit: green when reaching target
                     percentage = Math.min((value / habit.target) * 100, 100);
+                    colorClass = value >= habit.target ? 'good' : 'bad';
                 } else {
-                    percentage = value === 0 ? 100 : Math.max(0, 100 - (value / habit.target) * 100);
+                    // Bad habit: green for clean day (0), red for falls
+                    const isClean = value === 0;
+                    percentage = isClean ? 100 : Math.max(20, 100 - (value * 20)); // Show at least 20% for visibility
+                    colorClass = isClean ? 'good' : 'bad';
                 }
 
                 result.push({
                     label: days[date.getDay()],
                     value,
-                    percentage
+                    percentage,
+                    colorClass
                 });
             }
 
             return result;
+        }
+
+        // Milestones for bad habits (clean days streaks)
+        const MILESTONES = [3, 7, 14, 21, 28, 40, 55, 70, 90, 120, 150, 180];
+
+        function getMilestoneStatus(currentStreak, bestStreak) {
+            const milestones = [];
+
+            for (const days of MILESTONES) {
+                let status = 'pending';
+                if (bestStreak >= days) {
+                    status = 'achieved';
+                } else if (currentStreak > 0 && days > currentStreak && days === MILESTONES.find(m => m > currentStreak)) {
+                    status = 'current'; // Next milestone to achieve
+                }
+
+                milestones.push({
+                    days,
+                    status,
+                    icon: status === 'achieved' ? '🏆' : status === 'current' ? '🎯' : '🔒'
+                });
+            }
+
+            return milestones;
         }
 
         // ==================== Initialize ====================
