@@ -862,6 +862,102 @@
             color: var(--warning);
         }
 
+        /* Date Range Filter */
+        .date-range-filter {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .date-range-filter label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .date-range-filter input[type="date"] {
+            padding: 0.5rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+        }
+
+        .date-range-filter input[type="date"]:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .date-range-btn {
+            padding: 0.5rem 1rem;
+            background: var(--primary);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .date-range-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .quick-filters {
+            display: flex;
+            gap: 0.5rem;
+            margin-right: auto;
+        }
+
+        .quick-filter-btn {
+            padding: 0.4rem 0.8rem;
+            background: var(--bg-card-hover);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .quick-filter-btn:hover,
+        .quick-filter-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        /* Falls Ratio */
+        .falls-ratio {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: var(--bg-dark);
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .falls-ratio-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .falls-ratio-value.good {
+            color: var(--success);
+        }
+
+        .falls-ratio-value.bad {
+            color: var(--danger);
+        }
+
         /* Empty State */
         .empty-state {
             text-align: center;
@@ -1467,34 +1563,43 @@
             `;
         }
 
+        // Date range state for statistics
+        let statsDateRange = {
+            start: null,
+            end: null,
+            preset: 'month' // 'week', 'month', 'all'
+        };
+
+        function initDateRange() {
+            const today = new Date();
+            const monthAgo = new Date(today);
+            monthAgo.setMonth(monthAgo.getMonth() - 1);
+            statsDateRange.start = monthAgo;
+            statsDateRange.end = today;
+        }
+
         function renderStatistics() {
             const habits = getHabits();
-            const logs = getLogs();
 
             // Calculate overall statistics
             const totalHabits = habits.length;
-            const goodHabits = habits.filter(h => h.type === 'good').length;
-            const badHabits = habits.filter(h => h.type === 'bad').length;
+            const goodHabitsCount = habits.filter(h => h.type === 'good').length;
+            const badHabitsCount = habits.filter(h => h.type === 'bad').length;
 
             // Calculate today's completion
             const today = new Date();
             let todayCompleted = 0;
             habits.forEach(habit => {
                 const value = getHabitLog(habit.id, today);
-                // For good habits: success = reached target
-                // For bad habits: success = 0 falls (clean day)
                 const isSuccess = habit.type === 'good'
                     ? value >= habit.target
                     : value === 0;
                 if (isSuccess) todayCompleted++;
             });
 
-            // Calculate streak for all habits (good and bad)
-            let maxStreak = 0;
-            habits.forEach(habit => {
-                const streak = calculateStreak(habit);
-                if (streak > maxStreak) maxStreak = streak;
-            });
+            // Format dates for input fields
+            const startStr = statsDateRange.start ? formatDateKey(statsDateRange.start) : '';
+            const endStr = statsDateRange.end ? formatDateKey(statsDateRange.end) : '';
 
             elements.statsOverview.innerHTML = `
                 <div class="stat-card">
@@ -1504,23 +1609,18 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">✅</div>
-                    <div class="stat-value">${goodHabits}</div>
+                    <div class="stat-value">${goodHabitsCount}</div>
                     <div class="stat-label">הרגלים טובים</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">❌</div>
-                    <div class="stat-value">${badHabits}</div>
+                    <div class="stat-value">${badHabitsCount}</div>
                     <div class="stat-label">הרגלים רעים</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">🎯</div>
                     <div class="stat-value">${todayCompleted}/${totalHabits}</div>
                     <div class="stat-label">הושלמו היום</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">🔥</div>
-                    <div class="stat-value">${maxStreak}</div>
-                    <div class="stat-label">רצף מקסימלי</div>
                 </div>
             `;
 
@@ -1536,16 +1636,79 @@
                 return;
             }
 
-            let statsHtml = '';
+            let statsHtml = `
+                <div class="date-range-filter">
+                    <label>מתאריך:</label>
+                    <input type="date" id="statsStartDate" value="${startStr}">
+                    <label>עד:</label>
+                    <input type="date" id="statsEndDate" value="${endStr}">
+                    <div class="quick-filters">
+                        <button class="quick-filter-btn ${statsDateRange.preset === 'week' ? 'active' : ''}" data-preset="week">שבוע</button>
+                        <button class="quick-filter-btn ${statsDateRange.preset === 'month' ? 'active' : ''}" data-preset="month">חודש</button>
+                        <button class="quick-filter-btn ${statsDateRange.preset === 'all' ? 'active' : ''}" data-preset="all">הכל</button>
+                    </div>
+                </div>
+            `;
+
             habits.forEach(habit => {
                 statsHtml += renderHabitStats(habit);
             });
             elements.habitStatsList.innerHTML = statsHtml;
+
+            // Add event listeners for date range
+            document.getElementById('statsStartDate').addEventListener('change', (e) => {
+                statsDateRange.start = new Date(e.target.value);
+                statsDateRange.preset = null;
+                renderStatistics();
+            });
+
+            document.getElementById('statsEndDate').addEventListener('change', (e) => {
+                statsDateRange.end = new Date(e.target.value);
+                statsDateRange.preset = null;
+                renderStatistics();
+            });
+
+            document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const preset = btn.dataset.preset;
+                    const today = new Date();
+                    statsDateRange.preset = preset;
+                    statsDateRange.end = today;
+
+                    if (preset === 'week') {
+                        const weekAgo = new Date(today);
+                        weekAgo.setDate(weekAgo.getDate() - 7);
+                        statsDateRange.start = weekAgo;
+                    } else if (preset === 'month') {
+                        const monthAgo = new Date(today);
+                        monthAgo.setMonth(monthAgo.getMonth() - 1);
+                        statsDateRange.start = monthAgo;
+                    } else {
+                        statsDateRange.start = null;
+                    }
+
+                    renderStatistics();
+                });
+            });
         }
 
         function renderHabitStats(habit) {
-            const stats = calculateHabitStats(habit);
+            const stats = calculateHabitStats(habit, statsDateRange.start, statsDateRange.end);
             const weeklyData = getWeeklyData(habit);
+
+            // Calculate falls ratio for bad habits
+            let fallsRatioHtml = '';
+            if (habit.type === 'bad' && stats.totalDaysInRange > 0) {
+                const ratio = stats.totalCount / stats.totalDaysInRange;
+                const ratioClass = ratio < 0.3 ? 'good' : 'bad';
+                fallsRatioHtml = `
+                    <div class="falls-ratio">
+                        <span>יחס נפילות:</span>
+                        <span class="falls-ratio-value ${ratioClass}">${stats.totalCount}/${stats.totalDaysInRange}</span>
+                        <span>(${(ratio * 100).toFixed(1)}%)</span>
+                    </div>
+                `;
+            }
 
             return `
                 <div class="habit-stat-card ${habit.type}">
@@ -1617,6 +1780,7 @@
                             `).join('')}
                         </div>
                     </div>
+                    ${fallsRatioHtml}
                     ${habit.type === 'bad' ? renderMilestones(stats.currentStreak, stats.bestStreak) : ''}
                 </div>
             `;
@@ -1641,7 +1805,7 @@
             `;
         }
 
-        function calculateHabitStats(habit) {
+        function calculateHabitStats(habit, startDate = null, endDate = null) {
             const logs = getLogs();
             const habitLogs = [];
             const isGood = habit.type === 'good';
@@ -1649,14 +1813,32 @@
             Object.keys(logs).forEach(key => {
                 if (key.endsWith(`_${habit.id}`)) {
                     const dateStr = key.replace(`_${habit.id}`, '');
+                    const logDate = new Date(dateStr);
+
+                    // Filter by date range if provided
+                    if (startDate && logDate < startDate) return;
+                    if (endDate && logDate > endDate) return;
+
                     habitLogs.push({
-                        date: new Date(dateStr),
+                        date: logDate,
                         value: logs[key]
                     });
                 }
             });
 
             habitLogs.sort((a, b) => a.date - b.date);
+
+            // Calculate total days in range for ratio
+            let totalDaysInRange = 0;
+            if (startDate && endDate) {
+                const diffTime = Math.abs(endDate - startDate);
+                totalDaysInRange = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            } else if (habitLogs.length > 0) {
+                const firstLog = habitLogs[0].date;
+                const lastLog = habitLogs[habitLogs.length - 1].date;
+                const diffTime = Math.abs(lastLog - firstLog);
+                totalDaysInRange = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            }
 
             const totalDays = habitLogs.length;
             // For good habits: completed = reached target
@@ -1668,34 +1850,39 @@
             const avgPerDay = totalDays > 0 ? (totalCount / totalDays).toFixed(1) : 0;
             const completionRate = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
 
-            // Calculate streaks
+            // Calculate current streak (always from today backwards, not filtered)
             let currentStreak = 0;
-            let bestStreak = 0;
-            let tempStreak = 0;
-
-            // Current streak (from today backwards)
             const today = new Date();
             today.setHours(0, 0, 0, 0);
+            const allLogs = getLogs();
 
             for (let i = 0; i < 365; i++) {
                 const checkDate = new Date(today);
                 checkDate.setDate(checkDate.getDate() - i);
-                const log = habitLogs.find(l => formatDateKey(l.date) === formatDateKey(checkDate));
+                const key = getLogKey(checkDate, habit.id);
+                const value = allLogs[key];
 
-                // For good habits: success = reached target
-                // For bad habits: success = 0 falls
-                const isSuccess = isGood
-                    ? (log && log.value >= habit.target)
-                    : (log && log.value === 0);
+                // For bad habits: no log OR log with 0 = clean day = success
+                // For good habits: must have log with value >= target
+                let isSuccess;
+                if (isGood) {
+                    isSuccess = value !== undefined && value >= habit.target;
+                } else {
+                    // Bad habit: success if no log (didn't track = clean) or log is 0
+                    isSuccess = value === undefined || value === 0;
+                }
 
                 if (isSuccess) {
                     currentStreak++;
-                } else if (i > 0) {
+                } else {
                     break;
                 }
             }
 
-            // Best streak
+            // Calculate best streak from all logs
+            let bestStreak = 0;
+            let tempStreak = 0;
+
             habitLogs.sort((a, b) => a.date - b.date);
             habitLogs.forEach((log, index) => {
                 const isSuccess = isGood
@@ -1712,6 +1899,7 @@
 
             return {
                 totalDays,
+                totalDaysInRange,
                 completedDays,
                 totalCount,
                 avgPerDay,
@@ -1732,15 +1920,21 @@
                 const checkDate = new Date(today);
                 checkDate.setDate(checkDate.getDate() - i);
                 const key = getLogKey(checkDate, habit.id);
-                const value = logs[key] || 0;
+                const value = logs[key];
 
-                // For good habits: success = reached target
-                // For bad habits: success = 0 falls
-                const isSuccess = isGood ? value >= habit.target : value === 0;
+                // For bad habits: no log OR log with 0 = clean day = success
+                // For good habits: must have log with value >= target
+                let isSuccess;
+                if (isGood) {
+                    isSuccess = value !== undefined && value >= habit.target;
+                } else {
+                    // Bad habit: success if no log (clean) or log is 0
+                    isSuccess = value === undefined || value === 0;
+                }
 
                 if (isSuccess) {
                     streak++;
-                } else if (i > 0) {
+                } else {
                     break;
                 }
             }
@@ -1749,15 +1943,26 @@
         }
 
         function getWeeklyData(habit) {
-            const days = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+            const dayNames = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
             const result = [];
-            const today = new Date();
+            const logs = getLogs();
             const isGood = habit.type === 'good';
 
-            for (let i = 6; i >= 0; i--) {
-                const date = new Date(today);
-                date.setDate(date.getDate() - i);
-                const value = getHabitLog(habit.id, date);
+            // Find the start of the current week (Sunday)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const dayOfWeek = today.getDay(); // 0 = Sunday
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - dayOfWeek);
+
+            // Generate data for each day of the week (Sunday to Saturday)
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(startOfWeek);
+                date.setDate(startOfWeek.getDate() + i);
+
+                // Get value directly from logs
+                const key = getLogKey(date, habit.id);
+                const value = logs[key] || 0;
 
                 let percentage, colorClass;
                 if (isGood) {
@@ -1767,15 +1972,16 @@
                 } else {
                     // Bad habit: green for clean day (0), red for falls
                     const isClean = value === 0;
-                    percentage = isClean ? 100 : Math.max(20, 100 - (value * 20)); // Show at least 20% for visibility
+                    percentage = isClean ? 100 : Math.max(20, 100 - (value * 20));
                     colorClass = isClean ? 'good' : 'bad';
                 }
 
                 result.push({
-                    label: days[date.getDay()],
+                    label: dayNames[i],
                     value,
                     percentage,
-                    colorClass
+                    colorClass,
+                    isToday: formatDateKey(date) === formatDateKey(new Date())
                 });
             }
 
@@ -1808,6 +2014,7 @@
 
         // ==================== Initialize ====================
         function init() {
+            initDateRange();
             updateDateDisplay();
             renderDailyHabits();
         }
