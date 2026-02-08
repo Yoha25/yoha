@@ -2127,17 +2127,25 @@
 
                 // If no falls found, use first log date as start
                 // If falls found, calculate from the day after the last fall
-                const startDate = lastFallDate
-                    ? new Date(lastFallDate.getTime() + 24 * 60 * 60 * 1000)
-                    : (allHabitLogs.length > 0 ? allHabitLogs[allHabitLogs.length - 1].date : null);
+                // Sort ascending to find oldest log
+                allHabitLogs.sort((a, b) => a.date - b.date);
+                const firstLogDate = allHabitLogs[0].date;
 
-                if (startDate && currentStreak > 0) {
+                const timerStartDate = lastFallDate
+                    ? new Date(lastFallDate.getTime() + 24 * 60 * 60 * 1000)
+                    : firstLogDate;
+
+                // Show timer whenever there's clean time since last fall (or since tracking started)
+                if (timerStartDate) {
                     const now = new Date();
-                    const diff = now - startDate;
-                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    timeSinceLastFall = { days, hours, minutes };
+                    const diff = now - timerStartDate;
+                    // Only show if the timer start is in the past
+                    if (diff > 0) {
+                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        timeSinceLastFall = { days, hours, minutes };
+                    }
                 }
             }
 
