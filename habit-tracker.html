@@ -1473,9 +1473,35 @@
         function updateHabitLog(habitId, value) {
             const logs = getLogs();
             const key = getLogKey(currentDate, habitId);
-            logs[key] = Math.max(0, value);
+            const oldValue = logs[key] || 0;
+            const newValue = Math.max(0, value);
+            logs[key] = newValue;
+
+            // For bad habits: if value increased (new fall), save the timestamp
+            const habit = getHabits().find(h => h.id === habitId);
+            if (habit && habit.type === 'bad' && newValue > oldValue) {
+                saveFallTimestamp(habitId, Date.now());
+            }
+
             saveLogs(logs);
             renderDailyHabits();
+        }
+
+        // Fall timestamps storage
+        function getFallTimestamps() {
+            const data = localStorage.getItem('habitTracker_fallTimestamps');
+            return data ? JSON.parse(data) : {};
+        }
+
+        function saveFallTimestamp(habitId, timestamp) {
+            const timestamps = getFallTimestamps();
+            timestamps[habitId] = timestamp;
+            localStorage.setItem('habitTracker_fallTimestamps', JSON.stringify(timestamps));
+        }
+
+        function getLastFallTimestamp(habitId) {
+            const timestamps = getFallTimestamps();
+            return timestamps[habitId] || null;
         }
 
         function getHabitLog(habitId, date = currentDate) {
@@ -1766,6 +1792,9 @@
             });
             elements.habitStatsList.innerHTML = statsHtml;
 
+            // Update timers immediately
+            setTimeout(updateTimers, 0);
+
             // Add event listeners for date range
             document.getElementById('statsStartDate').addEventListener('change', (e) => {
                 statsDateRange.start = new Date(e.target.value);
@@ -1827,23 +1856,26 @@
 
             // Timer for bad habits - time since last fall
             let timerHtml = '';
-            if (habit.type === 'bad' && stats.timeSinceLastFall) {
-                const time = stats.timeSinceLastFall;
+            if (habit.type === 'bad' && stats.lastFallTimestamp) {
                 timerHtml = `
-                    <div class="streak-timer" data-habit-id="${habit.id}">
+                    <div class="streak-timer" data-habit-id="${habit.id}" data-last-fall="${stats.lastFallTimestamp}">
                         <span class="streak-timer-label">⏱️ זמן נקי:</span>
                         <div class="streak-timer-value">
                             <div class="timer-unit">
-                                <span class="timer-number">${time.days}</span>
+                                <span class="timer-number timer-days">0</span>
                                 <span class="timer-label">ימים</span>
                             </div>
                             <div class="timer-unit">
-                                <span class="timer-number">${time.hours}</span>
+                                <span class="timer-number timer-hours">0</span>
                                 <span class="timer-label">שעות</span>
                             </div>
                             <div class="timer-unit">
-                                <span class="timer-number">${time.minutes}</span>
+                                <span class="timer-number timer-minutes">0</span>
                                 <span class="timer-label">דקות</span>
+                            </div>
+                            <div class="timer-unit">
+                                <span class="timer-number timer-seconds">0</span>
+                                <span class="timer-label">שניות</span>
                             </div>
                         </div>
                     </div>
@@ -2110,10 +2142,13 @@
                 .sort((a, b) => b.days - a.days)
                 .slice(0, 5);
 
-            // Calculate time since last fall for bad habits
-            let timeSinceLastFall = null;
+            // Get last fall timestamp for bad habits
+            let lastFallTimestamp = null;
             if (!isGood && allHabitLogs.length > 0) {
-                // Sort by date descending
+                // First check if we have a saved timestamp
+                const savedTimestamp = getLastFallTimestamp(habit.id);
+
+                // Sort by date descending to find last fall
                 allHabitLogs.sort((a, b) => b.date - a.date);
 
                 // Find the last fall (value > 0)
@@ -2125,27 +2160,16 @@
                     }
                 }
 
-                // If no falls found, use first log date as start
-                // If falls found, calculate from the day after the last fall
-                // Sort ascending to find oldest log
-                allHabitLogs.sort((a, b) => a.date - b.date);
-                const firstLogDate = allHabitLogs[0].date;
-
-                const timerStartDate = lastFallDate
-                    ? new Date(lastFallDate.getTime() + 24 * 60 * 60 * 1000)
-                    : firstLogDate;
-
-                // Show timer whenever there's clean time since last fall (or since tracking started)
-                if (timerStartDate) {
-                    const now = new Date();
-                    const diff = now - timerStartDate;
-                    // Only show if the timer start is in the past
-                    if (diff > 0) {
-                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        timeSinceLastFall = { days, hours, minutes };
-                    }
+                if (savedTimestamp) {
+                    // Use saved timestamp (exact moment of fall)
+                    lastFallTimestamp = savedTimestamp;
+                } else if (lastFallDate) {
+                    // Fallback: use the date at end of day
+                    lastFallTimestamp = lastFallDate.getTime();
+                } else {
+                    // No falls - use first log date
+                    allHabitLogs.sort((a, b) => a.date - b.date);
+                    lastFallTimestamp = allHabitLogs[0].date.getTime();
                 }
             }
 
@@ -2159,7 +2183,7 @@
                 currentStreak,
                 bestStreak,
                 topStreaks,
-                timeSinceLastFall
+                lastFallTimestamp
             };
         }
 
@@ -2289,6 +2313,36 @@
 
             return milestones;
         }
+
+        // ==================== Live Timer Update ====================
+        function updateTimers() {
+            const timers = document.querySelectorAll('.streak-timer[data-last-fall]');
+            timers.forEach(timer => {
+                const lastFallTimestamp = parseInt(timer.dataset.lastFall);
+                const now = Date.now();
+                const diff = now - lastFallTimestamp;
+
+                if (diff > 0) {
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                    const daysEl = timer.querySelector('.timer-days');
+                    const hoursEl = timer.querySelector('.timer-hours');
+                    const minutesEl = timer.querySelector('.timer-minutes');
+                    const secondsEl = timer.querySelector('.timer-seconds');
+
+                    if (daysEl) daysEl.textContent = days;
+                    if (hoursEl) hoursEl.textContent = hours;
+                    if (minutesEl) minutesEl.textContent = minutes;
+                    if (secondsEl) secondsEl.textContent = seconds;
+                }
+            });
+        }
+
+        // Update timers every second
+        setInterval(updateTimers, 1000);
 
         // ==================== Initialize ====================
         function init() {
