@@ -967,6 +967,106 @@
             color: var(--danger);
         }
 
+        /* Timer */
+        .streak-timer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--bg-dark), var(--bg-card-hover));
+            border-radius: 12px;
+            margin-top: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .streak-timer-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .streak-timer-value {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .timer-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem;
+            background: var(--bg-card);
+            border-radius: 8px;
+            min-width: 50px;
+        }
+
+        .timer-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        .timer-label {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+        }
+
+        /* Top Streaks */
+        .top-streaks {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg-card-hover);
+            border-radius: 12px;
+        }
+
+        .top-streaks-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+        }
+
+        .top-streaks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .streak-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-dark);
+            border-radius: 8px;
+        }
+
+        .streak-rank {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .streak-rank-number {
+            font-weight: 700;
+            color: var(--text-secondary);
+            min-width: 20px;
+        }
+
+        .streak-rank-number.gold { color: #ffd700; }
+        .streak-rank-number.silver { color: #c0c0c0; }
+        .streak-rank-number.bronze { color: #cd7f32; }
+
+        .streak-days {
+            font-weight: 600;
+            color: var(--primary-light);
+        }
+
+        .streak-dates {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
         /* Empty State */
         .empty-state {
             text-align: center;
@@ -1711,16 +1811,63 @@
             const stats = calculateHabitStats(habit, statsDateRange.start, statsDateRange.end);
             const weeklyData = getWeeklyData(habit);
 
-            // Calculate falls ratio for bad habits
+            // Calculate falls ratio for bad habits (as average, not percentage)
             let fallsRatioHtml = '';
             if (habit.type === 'bad' && stats.totalDaysInRange > 0) {
-                const ratio = stats.totalCount / stats.totalDaysInRange;
-                const ratioClass = ratio < 0.3 ? 'good' : 'bad';
+                const avgFalls = (stats.totalCount / stats.totalDaysInRange).toFixed(1);
+                const ratioClass = parseFloat(avgFalls) < 0.5 ? 'good' : 'bad';
                 fallsRatioHtml = `
                     <div class="falls-ratio">
-                        <span>יחס נפילות:</span>
-                        <span class="falls-ratio-value ${ratioClass}">${stats.totalCount}/${stats.totalDaysInRange}</span>
-                        <span>(${(ratio * 100).toFixed(1)}%)</span>
+                        <span>ממוצע נפילות:</span>
+                        <span class="falls-ratio-value ${ratioClass}">${avgFalls}</span>
+                        <span>ליום (${stats.totalCount} נפילות ב-${stats.totalDaysInRange} ימים)</span>
+                    </div>
+                `;
+            }
+
+            // Timer for bad habits - time since last fall
+            let timerHtml = '';
+            if (habit.type === 'bad' && stats.timeSinceLastFall) {
+                const time = stats.timeSinceLastFall;
+                timerHtml = `
+                    <div class="streak-timer" data-habit-id="${habit.id}">
+                        <span class="streak-timer-label">⏱️ זמן נקי:</span>
+                        <div class="streak-timer-value">
+                            <div class="timer-unit">
+                                <span class="timer-number">${time.days}</span>
+                                <span class="timer-label">ימים</span>
+                            </div>
+                            <div class="timer-unit">
+                                <span class="timer-number">${time.hours}</span>
+                                <span class="timer-label">שעות</span>
+                            </div>
+                            <div class="timer-unit">
+                                <span class="timer-number">${time.minutes}</span>
+                                <span class="timer-label">דקות</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Top 5 streaks
+            let topStreaksHtml = '';
+            if (stats.topStreaks && stats.topStreaks.length > 0) {
+                const rankColors = ['gold', 'silver', 'bronze', '', ''];
+                topStreaksHtml = `
+                    <div class="top-streaks">
+                        <div class="top-streaks-title">🏆 5 הרצפים הארוכים ביותר</div>
+                        <div class="top-streaks-list">
+                            ${stats.topStreaks.map((streak, i) => `
+                                <div class="streak-item">
+                                    <div class="streak-rank">
+                                        <span class="streak-rank-number ${rankColors[i]}">#${i + 1}</span>
+                                        <span class="streak-days">${streak.days} ימים</span>
+                                    </div>
+                                    <span class="streak-dates">${streak.startDate} - ${streak.endDate}</span>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 `;
             }
@@ -1796,7 +1943,9 @@
                             `).join('')}
                         </div>
                     </div>
+                    ${timerHtml}
                     ${fallsRatioHtml}
+                    ${topStreaksHtml}
                     ${habit.type === 'bad' ? renderMilestones(stats.currentStreak, stats.bestStreak) : ''}
                 </div>
             `;
@@ -1916,9 +2065,11 @@
                 }
             }
 
-            // Calculate best streak from all logs
-            let bestStreak = 0;
+            // Calculate all streaks and find top 5
+            const allStreaks = [];
             let tempStreak = 0;
+            let streakStart = null;
+            let bestStreak = 0;
 
             habitLogs.sort((a, b) => a.date - b.date);
             habitLogs.forEach((log, index) => {
@@ -1927,12 +2078,68 @@
                     : log.value === 0;
 
                 if (isSuccess) {
+                    if (tempStreak === 0) {
+                        streakStart = log.date;
+                    }
                     tempStreak++;
                     if (tempStreak > bestStreak) bestStreak = tempStreak;
                 } else {
+                    if (tempStreak > 0) {
+                        allStreaks.push({
+                            days: tempStreak,
+                            startDate: formatDateDisplay(streakStart).split(',')[0],
+                            endDate: formatDateDisplay(habitLogs[index - 1].date).split(',')[0]
+                        });
+                    }
                     tempStreak = 0;
+                    streakStart = null;
                 }
             });
+
+            // Add current ongoing streak if exists
+            if (tempStreak > 0 && habitLogs.length > 0) {
+                allStreaks.push({
+                    days: tempStreak,
+                    startDate: formatDateDisplay(streakStart).split(',')[0],
+                    endDate: formatDateDisplay(habitLogs[habitLogs.length - 1].date).split(',')[0]
+                });
+            }
+
+            // Sort by days and get top 5
+            const topStreaks = allStreaks
+                .sort((a, b) => b.days - a.days)
+                .slice(0, 5);
+
+            // Calculate time since last fall for bad habits
+            let timeSinceLastFall = null;
+            if (!isGood && allHabitLogs.length > 0) {
+                // Sort by date descending
+                allHabitLogs.sort((a, b) => b.date - a.date);
+
+                // Find the last fall (value > 0)
+                let lastFallDate = null;
+                for (const log of allHabitLogs) {
+                    if (log.value > 0) {
+                        lastFallDate = log.date;
+                        break;
+                    }
+                }
+
+                // If no falls found, use first log date as start
+                // If falls found, calculate from the day after the last fall
+                const startDate = lastFallDate
+                    ? new Date(lastFallDate.getTime() + 24 * 60 * 60 * 1000)
+                    : (allHabitLogs.length > 0 ? allHabitLogs[allHabitLogs.length - 1].date : null);
+
+                if (startDate && currentStreak > 0) {
+                    const now = new Date();
+                    const diff = now - startDate;
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    timeSinceLastFall = { days, hours, minutes };
+                }
+            }
 
             return {
                 totalDays,
@@ -1942,7 +2149,9 @@
                 avgPerDay,
                 completionRate,
                 currentStreak,
-                bestStreak
+                bestStreak,
+                topStreaks,
+                timeSinceLastFall
             };
         }
 
