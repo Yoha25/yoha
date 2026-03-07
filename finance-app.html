@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💰 ניהול פיננסי חכם</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{font-family:'Heebo',sans-serif;box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f1f5f9;--card:#fff;--card2:#f8fafc;--border:#e2e8f0;
+  --sidebar:#1e1b4b;--sideborder:rgba(255,255,255,.08);
+  --pr:#6d28d9;--prl:#7c3aed;--prllight:#ede9fe;
+  --inc:#059669;--incbg:#ecfdf5;--incborder:#a7f3d0;
+  --exp:#dc2626;--expbg:#fef2f2;--expborder:#fecaca;
+  --wrn:#d97706;--wrnbg:#fffbeb;--wrnborder:#fde68a;
+  --txt:#1e293b;--txt2:#334155;--mu:#64748b;--mu2:#94a3b8
+}
+body{background:var(--bg);color:var(--txt);min-height:100vh}
+.fullscreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:200}
+.auth-bg{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#4c1d95 100%)}
+.auth-card{background:#fff;border-radius:20px;padding:36px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.auth-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:'Heebo',sans-serif;outline:none;transition:.2s;background:#fafafa;color:var(--txt)}
+.auth-input:focus{border-color:var(--prl);background:#fff;box-shadow:0 0 0 3px rgba(124,58,237,.1)}
+.auth-btn{width:100%;padding:13px;border-radius:10px;border:none;font-size:15px;font-weight:700;font-family:'Heebo',sans-serif;cursor:pointer;transition:.2s}
+.auth-btn-primary{background:linear-gradient(135deg,var(--pr),var(--prl));color:#fff;box-shadow:0 4px 14px rgba(109,40,217,.4)}
+.auth-btn-primary:hover{box-shadow:0 6px 20px rgba(109,40,217,.5);transform:translateY(-1px)}
+.auth-btn-google{background:#fff;color:#374151;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;gap:10px}
+.auth-btn-google:hover{background:#f9fafb;border-color:#9ca3af}
+.auth-tab{padding:8px 20px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;transition:.2s;border:none;background:transparent;font-family:'Heebo',sans-serif}
+.auth-tab.active{background:var(--prllight);color:var(--pr)}
+.auth-tab:not(.active){color:var(--mu)}
+.step-badge{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.step-done{background:#d1fae5;color:#059669}
+.step-active{background:var(--prllight);color:var(--pr)}
+.step-pending{background:var(--card2);color:var(--mu)}
+.code-box{background:#1e293b;color:#e2e8f0;border-radius:10px;padding:14px;font-size:12px;font-family:monospace;overflow-x:auto;white-space:pre;line-height:1.6;position:relative}
+.copy-btn{position:absolute;top:8px;left:8px;background:rgba(255,255,255,.1);border:none;color:#e2e8f0;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-family:'Heebo',sans-serif}
+.copy-btn:hover{background:rgba(255,255,255,.2)}
+#sidebar{width:248px;min-height:100vh;background:var(--sidebar);position:fixed;right:0;top:0;bottom:0;display:flex;flex-direction:column;z-index:50;overflow-y:auto;box-shadow:2px 0 20px rgba(30,27,75,.15)}
+#main{margin-right:248px;flex:1;padding:32px;min-height:100vh}
+.nav-logo{padding:22px 18px 16px;border-bottom:1px solid var(--sideborder)}
+.nav-logo-title{font-size:20px;font-weight:900;background:linear-gradient(135deg,#a78bfa,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-group{padding:8px 0}
+.nav-group-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:1px;padding:6px 18px 3px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:9px;cursor:pointer;margin:2px 10px;font-size:13.5px;font-weight:500;color:rgba(255,255,255,.55);transition:.18s;white-space:nowrap}
+.nav-item:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.9)}
+.nav-item.active{background:rgba(124,58,237,.4);color:#c4b5fd;font-weight:700}
+.nav-icon{font-size:16px;width:20px;text-align:center}
+.user-panel{padding:12px 14px;border-top:1px solid var(--sideborder)}
+.sync-dot{font-size:11px;color:rgba(255,255,255,.4);padding:4px 10px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card2{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px}
+.card-hover{transition:.2s}.card-hover:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-1px)}
+.card-inc{background:var(--incbg);border:1px solid var(--incborder);border-radius:14px;padding:22px}
+.card-exp{background:var(--expbg);border:1px solid var(--expborder);border-radius:14px;padding:22px}
+.card-wrn{background:var(--wrnbg);border:1px solid var(--wrnborder);border-radius:14px;padding:22px}
+.card-pr{background:var(--prllight);border:1px solid #c4b5fd;border-radius:14px;padding:22px}
+.btn{padding:8px 18px;border-radius:9px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:'Heebo',sans-serif;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--pr);color:#fff;box-shadow:0 2px 8px rgba(109,40,217,.25)}.btn-primary:hover{background:var(--prl)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-ghost{background:transparent;color:var(--mu);border:1px solid var(--border)}.btn-ghost:hover{color:var(--txt);background:var(--card2)}
+.btn-danger{background:#fee2e2;color:#dc2626;border:1px solid #fecaca}.btn-danger:hover{background:#fecaca}
+.btn-success{background:#d1fae5;color:#059669;border:1px solid #a7f3d0}.btn-success:hover{background:#a7f3d0}
+.input,.select{background:var(--card);border:1px solid var(--border);color:var(--txt);padding:9px 12px;border-radius:9px;font-size:14px;width:100%;font-family:'Heebo',sans-serif;outline:none;transition:.2s}
+.input:focus,.select:focus{border-color:var(--prl);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
+.label{font-size:12px;font-weight:700;color:var(--mu);margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:.4px}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:700}
+.badge-inc{background:var(--incbg);color:var(--inc);border:1px solid var(--incborder)}
+.badge-exp{background:var(--expbg);color:var(--exp);border:1px solid var(--expborder)}
+.badge-wrn{background:var(--wrnbg);color:var(--wrn);border:1px solid var(--wrnborder)}
+.badge-pr{background:var(--prllight);color:var(--pr);border:1px solid #c4b5fd}
+.badge-gray{background:var(--card2);color:var(--mu);border:1px solid var(--border)}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.progress{height:8px;background:var(--border);border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;transition:width .5s}
+.tabs{display:flex;gap:3px;background:var(--card2);padding:4px;border-radius:11px;margin-bottom:20px;width:fit-content;border:1px solid var(--border)}
+.tab{padding:7px 18px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:.18s;color:var(--mu)}
+.tab.active{background:var(--card);color:var(--pr);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.period-btn{padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--mu);transition:.18s;font-family:'Heebo',sans-serif}
+.period-btn.active{background:var(--prllight);border-color:var(--prl);color:var(--pr)}
+.row{display:flex;align-items:center;padding:12px 8px;border-bottom:1px solid var(--border);margin:0 -8px;border-radius:8px}
+.row:last-child{border-bottom:none}
+.row:hover{background:var(--card2)}
+.gt{background:linear-gradient(135deg,var(--pr),#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.section-title{font-size:22px;font-weight:800;margin-bottom:4px}
+.section-sub{font-size:14px;color:var(--mu);margin-bottom:24px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.num-inc{color:var(--inc);font-weight:700}
+.num-exp{color:var(--exp);font-weight:700}
+.fade{animation:fadeIn .28s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.chart-box{position:relative;height:220px}
+.insight-card{border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;gap:12px}
+.insight-exp{background:var(--expbg);border:1px solid var(--expborder)}
+.insight-wrn{background:var(--wrnbg);border:1px solid var(--wrnborder)}
+.insight-inc{background:var(--incbg);border:1px solid var(--incborder)}
+.tip-card{background:linear-gradient(135deg,var(--prllight),#f5f3ff);border:1px solid #c4b5fd;border-radius:12px;padding:14px 16px;display:flex;gap:12px}
+.drop-zone{border:2px dashed var(--border);border-radius:14px;padding:40px;text-align:center;cursor:pointer;transition:.2s;background:var(--card2)}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--prl);background:var(--prllight)}
+.divider{height:1px;background:var(--border);margin:16px 0}
+.spinner{width:48px;height:48px;border:4px solid var(--prllight);border-top-color:var(--prl);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+@media(max-width:900px){#sidebar{width:60px}.nav-label,.nav-group-label{display:none}#main{margin-right:60px;padding:16px}.grid4{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.grid2,.grid3,.grid4{grid-template-columns:1fr}#main{padding:12px}}
+</style>
+</head>
+<body>
+
+<!-- ═══ SETUP SCREEN ═══ -->
+<div id="setupScreen" class="fullscreen auth-bg" style="display:none;padding:16px;align-items:flex-start;overflow-y:auto;padding-top:40px">
+  <div style="width:100%;max-width:560px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:36px;margin-bottom:8px">💰</div>
+      <div style="font-size:24px;font-weight:900;color:#fff">הגדרת Supabase</div>
+      <div style="font-size:14px;color:rgba(255,255,255,.5);margin-top:4px">3 צעדים פשוטים לחיבור הנתונים</div>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="auth-card" style="margin-bottom:14px">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div class="step-badge step-active">1</div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:15px;margin-bottom:6px">צור פרויקט Supabase חינמי</div>
+          <div style="font-size:13px;color:var(--mu);margin-bottom:12px">Supabase הוא שירות מסד נתונים חינמי שיאחסן ויסנכרן את הנתונים שלך</div>
+          <a href="https://supabase.com" target="_blank" class="btn btn-primary" style="text-decoration:none;font-size:13px">🌐 פתח supabase.com ←</a>
+          <div style="font-size:12px;color:var(--mu);margin-top:10px">לחץ <strong>Start your project</strong> → הירשם עם Google → <strong>New project</strong> → בחר שם ← בחר סיסמה חזקה → <strong>Create project</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="auth-card" style="margin-bottom:14px">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div class="step-badge step-active">2</div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:15px;margin-bottom:6px">הרץ את קוד ה-SQL הבא</div>
+          <div style="font-size:13px;color:var(--mu);margin-bottom:12px">בפרויקט שלך: לחץ על <strong>SQL Editor</strong> בתפריט → <strong>New query</strong> → הדבק ולחץ <strong>Run</strong></div>
+          <div class="code-box" id="sqlBox">create table if not exists user_data (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade unique not null,
+  data jsonb default '{}' not null,
+  updated_at timestamptz default now() not null
+);
+alter table user_data enable row level security;
+create policy "users_own_data" on user_data
+  for all to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);<button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('sqlBox').innerText.replace('Copy','').trim());this.textContent='✅ הועתק'">Copy</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="auth-card" style="margin-bottom:14px">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div class="step-badge step-active">3</div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:15px;margin-bottom:6px">הכנס את מפתחות הפרויקט</div>
+          <div style="font-size:13px;color:var(--mu);margin-bottom:12px">בפרויקט Supabase: <strong>Project Settings</strong> → <strong>API</strong> → העתק את ה-URL וה-anon key</div>
+          <div style="display:grid;gap:12px">
+            <div>
+              <div class="label">Project URL</div>
+              <input class="auth-input" id="setupUrl" placeholder="https://xxxxxxxxxxxx.supabase.co">
+            </div>
+            <div>
+              <div class="label">Anon / Public Key</div>
+              <input class="auth-input" id="setupKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+            </div>
+            <button class="auth-btn auth-btn-primary" onclick="saveSetup()">✅ התחבר</button>
+            <div id="setupErr" style="color:var(--exp);font-size:13px;text-align:center;display:none"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Netlify tip -->
+    <div style="background:rgba(255,255,255,.08);border-radius:14px;padding:16px;text-align:center">
+      <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:8px">📡 <strong style="color:rgba(255,255,255,.9)">לפרסום כאתר:</strong> לאחר ההגדרה, גרור את קובץ ה-HTML הזה ל-<a href="https://netlify.com/drop" target="_blank" style="color:#c4b5fd">netlify.com/drop</a> ותקבל URL חינמי</div>
+    </div>
+    <div style="height:40px"></div>
+  </div>
+</div>
+
+<!-- ═══ LOGIN SCREEN ═══ -->
+<div id="loginScreen" class="fullscreen auth-bg" style="display:none;padding:16px">
+  <div class="auth-card">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:32px;margin-bottom:6px">💰</div>
+      <div style="font-size:22px;font-weight:900;color:var(--txt)">ניהול פיננסי חכם</div>
+      <div style="font-size:13px;color:var(--mu);margin-top:4px">הנתונים שלך, תמיד מסונכרנים</div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:4px;background:var(--card2);padding:4px;border-radius:10px;margin-bottom:22px">
+      <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">כניסה</button>
+      <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">הרשמה</button>
+    </div>
+
+    <div style="display:grid;gap:14px">
+      <div>
+        <div class="label">כתובת מייל</div>
+        <input class="auth-input" type="email" id="authEmail" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doAuth()">
+      </div>
+      <div>
+        <div class="label">סיסמה</div>
+        <input class="auth-input" type="password" id="authPassword" placeholder="לפחות 6 תווים" onkeydown="if(event.key==='Enter')doAuth()">
+      </div>
+      <div id="authMsg" style="font-size:13px;text-align:center;display:none;padding:8px;border-radius:8px"></div>
+      <button class="auth-btn auth-btn-primary" id="authSubmitBtn" onclick="doAuth()">כניסה</button>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin:18px 0">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-size:12px;color:var(--mu)">או</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+
+    <button class="auth-btn auth-btn-google" onclick="doGoogleAuth()">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      כניסה עם Google
+    </button>
+
+    <div style="text-align:center;margin-top:16px">
+      <button onclick="showScreen('setup')" style="background:none;border:none;color:var(--mu);font-size:12px;cursor:pointer;font-family:'Heebo',sans-serif">⚙️ שנה הגדרות Supabase</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LOADING SCREEN ═══ -->
+<div id="loadingScreen" class="fullscreen" style="display:flex;background:var(--bg)">
+  <div style="text-align:center">
+    <div class="spinner"></div>
+    <div style="font-size:18px;font-weight:700;color:var(--txt)">טוען נתונים...</div>
+    <div style="font-size:13px;color:var(--mu);margin-top:6px">מסנכרן עם הענן</div>
+  </div>
+</div>
+
+<!-- ═══ APP SCREEN ═══ -->
+<div id="appScreen" style="display:none">
+  <div id="sidebar">
+    <div class="nav-logo">
+      <div class="nav-logo-title">💰 פיננסי</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:2px" class="nav-label">ניהול פיננסי חכם</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label nav-label">ראשי</div>
+      <div class="nav-item active" data-p="dashboard" onclick="App.goto('dashboard')"><span class="nav-icon">📊</span><span class="nav-label">לוח מחוונים</span></div>
+      <div class="nav-item" data-p="transactions" onclick="App.goto('transactions')"><span class="nav-icon">💸</span><span class="nav-label">עסקאות</span></div>
+      <div class="nav-item" data-p="import" onclick="App.goto('import')"><span class="nav-icon">📂</span><span class="nav-label">ייבוא מבנק</span></div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label nav-label">ניהול</div>
+      <div class="nav-item" data-p="categories" onclick="App.goto('categories')"><span class="nav-icon">🏷️</span><span class="nav-label">קטגוריות</span></div>
+      <div class="nav-item" data-p="fixed" onclick="App.goto('fixed')"><span class="nav-icon">📌</span><span class="nav-label">הוצאות קבועות</span></div>
+      <div class="nav-item" data-p="installments" onclick="App.goto('installments')"><span class="nav-icon">💳</span><span class="nav-label">תשלומים</span></div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label nav-label">עושר</div>
+      <div class="nav-item" data-p="investments" onclick="App.goto('investments')"><span class="nav-icon">📈</span><span class="nav-label">השקעות וחסכונות</span></div>
+      <div class="nav-item" data-p="loans" onclick="App.goto('loans')"><span class="nav-icon">🤝</span><span class="nav-label">הלוואות וחובות</span></div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label nav-label">תובנות</div>
+      <div class="nav-item" data-p="ai" onclick="App.goto('ai')"><span class="nav-icon">🤖</span><span class="nav-label">ניתוח AI</span></div>
+    </div>
+    <div style="flex:1"></div>
+    <div id="syncStatus" class="sync-dot nav-label">🟢 מסונכרן</div>
+    <div class="user-panel" id="userPanel"></div>
+  </div>
+  <main id="main"><div id="content" class="fade"></div></main>
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div id="modalOverlay" class="overlay" style="display:none" onclick="if(event.target===this)App.closeModal()">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────
+const Config={
+  get url(){return localStorage.getItem('sb_url')||''},
+  get key(){return localStorage.getItem('sb_key')||''},
+  set(u,k){localStorage.setItem('sb_url',u);localStorage.setItem('sb_key',k)},
+  ok(){return!!(this.url&&this.key)}
+};
+
+// ── SUPABASE / AUTH / SYNC ──────────────────────────────────
+let sb=null,currentUser=null,syncTimer=null;
+
+function initSB(){
+  if(!Config.ok())return false;
+  try{sb=supabase.createClient(Config.url,Config.key);return true;}catch(e){return false;}
+}
+
+async function loadCloud(){
+  if(!sb||!currentUser)return null;
+  try{const{data}=await sb.from('user_data').select('data').eq('user_id',currentUser.id).single();return data?.data||null;}catch(e){return null;}
+}
+
+function scheduleSave(d){
+  if(!d)return;
+  localStorage.setItem('finapp3',JSON.stringify(d));
+  setSyncStatus('⏳ שומר...');
+  clearTimeout(syncTimer);
+  syncTimer=setTimeout(async()=>{
+    if(!sb||!currentUser){setSyncStatus('💾 מקומי');return;}
+    try{
+      await sb.from('user_data').upsert({user_id:currentUser.id,data:d,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+      setSyncStatus('🟢 מסונכרן');
+    }catch(e){setSyncStatus('🔴 שגיאה');}
+  },2000);
+}
+
+function setSyncStatus(txt){const el=document.getElementById('syncStatus');if(el)el.textContent=txt;}
+
+function subscribeRealtime(){
+  if(!sb||!currentUser)return;
+  sb.channel('fin_rt').on('postgres_changes',
+    {event:'UPDATE',schema:'public',table:'user_data',filter:`user_id=eq.${currentUser.id}`},
+    p=>{if(p.new?.data&&JSON.stringify(p.new.data)!==JSON.stringify(App.state)){App.loadExternal(p.new.data);setSyncStatus('🟢 מסונכרן');}}
+  ).subscribe();
+}
+
+function updateUserPanel(){
+  const el=document.getElementById('userPanel');if(!el||!currentUser)return;
+  const email=currentUser.email||'';
+  const name=currentUser.user_metadata?.full_name||email.split('@')[0]||'משתמש';
+  const av=currentUser.user_metadata?.avatar_url;
+  el.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+    ${av?`<img src="${av}" style="width:32px;height:32px;border-radius:50%;border:2px solid rgba(255,255,255,.2)">`:`<div style="width:32px;height:32px;border-radius:50%;background:var(--prl);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff">${name[0].toUpperCase()}</div>`}
+    <div><div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px" class="nav-label">${name}</div>
+    <div style="font-size:10px;color:rgba(255,255,255,.35)" class="nav-label">${email}</div></div>
+  </div>
+  <button onclick="doLogout()" style="width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);padding:6px;border-radius:7px;cursor:pointer;font-size:12px;font-family:'Heebo',sans-serif" class="nav-label">התנתק</button>`;
+}
+
+// ── SCREEN MANAGEMENT ───────────────────────────────────────
+function showScreen(name){
+  ['setup','login','loading','app'].forEach(s=>{
+    const el=document.getElementById(s+'Screen');
+    if(!el)return;
+    el.style.display=s===name?(s==='app'?'block':'flex'):'none';
+  });
+}
+
+// ── AUTH HANDLERS ───────────────────────────────────────────
+let authMode='login';
+function switchAuthTab(mode){
+  authMode=mode;
+  document.getElementById('tabLogin').className='auth-tab'+(mode==='login'?' active':'');
+  document.getElementById('tabRegister').className='auth-tab'+(mode==='register'?' active':'');
+  document.getElementById('authSubmitBtn').textContent=mode==='login'?'כניסה':'הרשמה';
+  showAuthMsg('','');
+}
+
+function showAuthMsg(txt,type){
+  const el=document.getElementById('authMsg');
+  el.style.display=txt?'block':'none';
+  el.textContent=txt;
+  el.style.background=type==='ok'?'#d1fae5':type==='err'?'#fee2e2':'#f1f5f9';
+  el.style.color=type==='ok'?'#059669':type==='err'?'#dc2626':'#64748b';
+}
+
+async function doAuth(){
+  const email=document.getElementById('authEmail').value.trim();
+  const pw=document.getElementById('authPassword').value;
+  if(!email||!pw){showAuthMsg('יש להזין מייל וסיסמה','err');return;}
+  const btn=document.getElementById('authSubmitBtn');
+  btn.disabled=true;btn.textContent='מתחבר...';
+  try{
+    if(authMode==='login'){await sb.auth.signInWithPassword({email,password:pw});}
+    else{
+      const{error}=await sb.auth.signUp({email,password:pw});
+      if(error)throw error;
+      showAuthMsg('נשלח מייל אימות — בדוק את תיבת הדואר שלך','ok');
+      btn.disabled=false;btn.textContent='הרשמה';return;
+    }
+  }catch(e){showAuthMsg(e.message||'שגיאה בכניסה','err');btn.disabled=false;btn.textContent=authMode==='login'?'כניסה':'הרשמה';}
+}
+
+async function doGoogleAuth(){
+  await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href}});
+}
+
+async function doLogout(){
+  if(!confirm('להתנתק?'))return;
+  await sb.auth.signOut();
+}
+
+async function saveSetup(){
+  const url=document.getElementById('setupUrl').value.trim();
+  const key=document.getElementById('setupKey').value.trim();
+  const err=document.getElementById('setupErr');
+  if(!url||!key){err.textContent='יש למלא URL ו-Key';err.style.display='block';return;}
+  Config.set(url,key);
+  if(!initSB()){err.textContent='מפתחות לא תקינים';err.style.display='block';return;}
+  err.style.display='none';
+  showScreen('loading');
+  const{data:{session}}=await sb.auth.getSession();
+  if(session?.user){currentUser=session.user;await startApp();}
+  else showScreen('login');
+  sb.auth.onAuthStateChange(async(event,session)=>{
+    if(event==='SIGNED_IN'&&session?.user){currentUser=session.user;await startApp();}
+    else if(event==='SIGNED_OUT'){currentUser=null;showScreen('login');}
+  });
+}
+
+// ── MAIN BOOTSTRAP ──────────────────────────────────────────
+async function startApp(){
+  showScreen('loading');
+  const cloud=await loadCloud();
+  const local=JSON.parse(localStorage.getItem('finapp3')||'null');
+  const data=cloud||local;
+  updateUserPanel();
+  App.start(data);
+  showScreen('app');
+  subscribeRealtime();
+  setSyncStatus('🟢 מסונכרן');
+}
+
+async function main(){
+  // הצג את האפליקציה מיד עם נתונים מקומיים
+  const local=JSON.parse(localStorage.getItem('finapp3')||'null');
+  App.start(local);
+  showScreen('app');
+
+  // נסה Supabase ברקע (אופציונלי — לסנכרון ענן)
+  if(!initSB()){
+    setSyncStatus('💾 מקומי');
+    updateUserPanel();
+    return;
+  }
+  try{
+    const{data:{session}}=await sb.auth.getSession();
+    if(session?.user){
+      currentUser=session.user;
+      updateUserPanel();
+      const cloud=await loadCloud();
+      if(cloud)App.loadExternal(cloud);
+      subscribeRealtime();
+      setSyncStatus('🟢 מסונכרן');
+    }else{
+      setSyncStatus('☁️ לא מחובר');
+      updateUserPanel();
+    }
+    sb.auth.onAuthStateChange(async(event,session)=>{
+      if(event==='SIGNED_IN'&&session?.user){
+        currentUser=session.user;
+        updateUserPanel();
+        const cloud=await loadCloud();
+        if(cloud)App.loadExternal(cloud);
+        subscribeRealtime();
+        setSyncStatus('🟢 מסונכרן');
+        document.getElementById('modalOverlay').style.display='none';
+      }else if(event==='SIGNED_OUT'){
+        currentUser=null;
+        setSyncStatus('☁️ לא מחובר');
+        updateUserPanel();
+      }
+    });
+  }catch(e){setSyncStatus('💾 מקומי');}
+}
+
+// ── DATA CONSTANTS ──────────────────────────────────────────
+const DEF_CATS={
+  income:['משכורת','פרילנס','השכרת נכס','דיבידנדים','מתנות','ביטוח לאומי','החזר מס','אחר'],
+  expense:['מזון','תחבורה','דיור','חשבונות','בריאות','בידור','קניות','חינוך','ביגוד','מסעדות','טיפוח','אחר']
+};
+const SAMPLE_DATA={
+  transactions:[
+    {id:1,date:'2026-03-05',type:'income',amount:12000,category:'משכורת',note:'משכורת מרץ'},
+    {id:2,date:'2026-03-04',type:'expense',amount:850,category:'מזון',note:'קניות סופר'},
+    {id:3,date:'2026-03-03',type:'expense',amount:3200,category:'דיור',note:'שכירות מרץ'},
+    {id:4,date:'2026-03-02',type:'expense',amount:320,category:'תחבורה',note:'דלק'},
+    {id:5,date:'2026-03-01',type:'income',amount:2500,category:'פרילנס',note:'פרויקט עיצוב'},
+    {id:6,date:'2026-02-28',type:'expense',amount:280,category:'חשבונות',note:'חשמל גז'},
+    {id:7,date:'2026-02-27',type:'expense',amount:650,category:'מסעדות',note:'ארוחות בחוץ'},
+    {id:8,date:'2026-02-25',type:'income',amount:12000,category:'משכורת',note:'משכורת פברואר'},
+    {id:9,date:'2026-02-20',type:'expense',amount:580,category:'בריאות',note:'רופא ותרופות'},
+    {id:10,date:'2026-02-15',type:'expense',amount:3200,category:'דיור',note:'שכירות פברואר'},
+    {id:11,date:'2026-01-25',type:'income',amount:12000,category:'משכורת',note:'משכורת ינואר'},
+    {id:12,date:'2026-01-20',type:'expense',amount:3200,category:'דיור',note:'שכירות ינואר'},
+    {id:13,date:'2026-01-15',type:'expense',amount:750,category:'מזון',note:'קניות גדולות'},
+    {id:14,date:'2025-12-25',type:'income',amount:12000,category:'משכורת',note:'משכורת דצמבר'},
+    {id:15,date:'2025-12-10',type:'income',amount:3200,category:'פרילנס',note:'אתר לחברה'},
+    {id:16,date:'2025-11-25',type:'income',amount:12000,category:'משכורת',note:'משכורת נובמבר'},
+    {id:17,date:'2025-10-25',type:'income',amount:12000,category:'משכורת',note:'משכורת אוקטובר'},
+  ],
+  categories:JSON.parse(JSON.stringify(DEF_CATS)),
+  fixedExpenses:[
+    {id:1,name:'שכירות',amount:3200,day:1,category:'דיור'},
+    {id:2,name:'חשמל וגז',amount:280,day:15,category:'חשבונות'},
+    {id:3,name:'אינטרנט',amount:99,day:10,category:'חשבונות'},
+    {id:4,name:'ביטוח בריאות',amount:350,day:5,category:'בריאות'},
+    {id:5,name:'חדר כושר',amount:180,day:1,category:'בריאות'},
+  ],
+  installments:[
+    {id:1,name:'מחשב נייד',totalAmount:6000,monthlyPayment:500,paidCount:4,totalCount:12,category:'קניות'},
+    {id:2,name:'טלוויזיה',totalAmount:3600,monthlyPayment:300,paidCount:8,totalCount:12,category:'קניות'},
+  ],
+  investments:[
+    {id:1,name:'תיק מניות S&P500',type:'מניות',invested:50000,currentValue:62000,date:'2024-01-01'},
+    {id:2,name:'ביטקוין',type:'קריפטו',invested:5000,currentValue:7800,date:'2024-06-01'},
+    {id:3,name:'קרן נאמנות',type:'קרן',invested:20000,currentValue:21500,date:'2023-06-01'},
+  ],
+  savings:[
+    {id:1,name:'קרן חירום',goal:30000,current:18000,deadline:'2026-12-31'},
+    {id:2,name:'חופשה לאירופה',goal:15000,current:6500,deadline:'2026-08-01'},
+    {id:3,name:'מקדמה לדירה',goal:200000,current:45000,deadline:'2028-01-01'},
+  ],
+  loans:[
+    {id:1,direction:'owe',person:'בנק לאומי',amount:80000,remaining:62000,monthlyPayment:1200,interestRate:3.5,date:'2023-01-01',note:'הלוואה לרכב',paid:false},
+    {id:2,direction:'owed',person:'דני כהן',amount:2000,remaining:2000,monthlyPayment:0,interestRate:0,date:'2026-01-15',note:'הלוואה אישית',paid:false},
+  ],
+  page:'dashboard',tab:{},filter:{month:'',type:'all',cat:''},dashPeriod:'month',dashFrom:'',dashTo:''
+};
+
+// ── APP OBJECT ──────────────────────────────────────────────
+const App={
+  state:null,
+  charts:{},
+
+  start(data){
+    this.state=data?{...SAMPLE_DATA,...data,page:'dashboard',tab:{},filter:data.filter||{month:'',type:'all',cat:''},dashPeriod:data.dashPeriod||'month',dashFrom:data.dashFrom||'',dashTo:data.dashTo||''}:JSON.parse(JSON.stringify(SAMPLE_DATA));
+    this.renderNav();
+    this.render();
+  },
+
+  loadExternal(data){
+    if(!data)return;
+    const page=this.state?.page||'dashboard';
+    const tab=this.state?.tab||{};
+    const filter=this.state?.filter||{};
+    this.state={...data,page,tab,filter};
+    this.render();
+  },
+
+  save(){
+    scheduleSave(this.state);
+  },
+
+  goto(p){
+    this.state.page=p;
+    document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.p===p));
+    this.render();
+  },
+
+  render(){
+    Object.values(this.charts).forEach(c=>{try{c.destroy()}catch(e){}});
+    this.charts={};
+    const c=document.getElementById('content');
+    c.innerHTML='';c.className='fade';
+    const map={
+      dashboard:()=>this.renderDashboard(),
+      transactions:()=>this.renderTransactions(),
+      import:()=>this.renderImport(),
+      categories:()=>this.renderCategories(),
+      fixed:()=>this.renderFixed(),
+      installments:()=>this.renderInstallments(),
+      investments:()=>this.renderInvestments(),
+      loans:()=>this.renderLoans(),
+      ai:()=>this.renderAI()
+    };
+    (map[this.state.page]||map.dashboard)();
+  },
+
+  renderNav(){
+    document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.p===this.state.page));
+  },
+
+  // ── UTILS ──
+  fc(n){return'₪'+(+n||0).toLocaleString('he-IL',{maximumFractionDigits:0})},
+  fd(d){if(!d)return'';return new Date(d+'T12:00:00').toLocaleDateString('he-IL')},
+  curMonth(){return new Date().toISOString().slice(0,7)},
+  prevM(m,n=1){const d=new Date(m+'-01');d.setMonth(d.getMonth()-n);return d.toISOString().slice(0,7)},
+  monthTx(m){return(this.state.transactions||[]).filter(t=>t.date.slice(0,7)===m)},
+  monthInc(m){return this.monthTx(m).filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)},
+  monthExp(m){return this.monthTx(m).filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)},
+  catExp(txs){const r={};txs.filter(t=>t.type==='expense').forEach(t=>{r[t.category]=(r[t.category]||0)+t.amount});return r},
+  netWorth(){
+    const inv=(this.state.investments||[]).reduce((s,i)=>s+i.currentValue,0);
+    const sav=(this.state.savings||[]).reduce((s,i)=>s+i.current,0);
+    const debt=(this.state.loans||[]).filter(l=>l.direction==='owe'&&!l.paid).reduce((s,l)=>s+l.remaining,0);
+    return inv+sav-debt;
+  },
+  getPeriodTxs(p,from,to){
+    const all=this.state.transactions||[];
+    const now=new Date(),m=this.curMonth();
+    if(p==='month')return all.filter(t=>t.date.slice(0,7)===m);
+    if(p==='3months'){const d=new Date(now);d.setMonth(d.getMonth()-3);return all.filter(t=>t.date>=d.toISOString().slice(0,10));}
+    if(p==='6months'){const d=new Date(now);d.setMonth(d.getMonth()-6);return all.filter(t=>t.date>=d.toISOString().slice(0,10));}
+    if(p==='year')return all.filter(t=>t.date.startsWith(now.getFullYear().toString()));
+    if(p==='custom'&&from&&to)return all.filter(t=>t.date>=from&&t.date<=to);
+    return all.filter(t=>t.date.slice(0,7)===m);
+  },
+  periodLabel(p,from,to){
+    if(p==='month')return'החודש';if(p==='3months')return'3 חודשים';
+    if(p==='6months')return'6 חודשים';if(p==='year')return'השנה';
+    if(p==='custom'&&from&&to)return this.fd(from)+' – '+this.fd(to);
+    return'החודש';
+  },
+
+  openModal(html,title){
+    document.getElementById('modalBox').innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
+        <h3 style="font-size:18px;font-weight:800">${title}</h3>
+        <button onclick="App.closeModal()" style="background:var(--card2);border:1px solid var(--border);color:var(--mu);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px">✕</button>
+      </div>${html}`;
+    document.getElementById('modalOverlay').style.display='flex';
+  },
+  closeModal(){document.getElementById('modalOverlay').style.display='none'},
+
+  // ── DASHBOARD ──
+  renderDashboard(){
+    const p=this.state.dashPeriod||'month',from=this.state.dashFrom||'',to=this.state.dashTo||'';
+    const txs=this.getPeriodTxs(p,from,to);
+    const inc=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+    const exp=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    const bal=inc-exp,m=this.curMonth(),pm=this.prevM(m);
+    const pInc=this.monthInc(pm),pExp=this.monthExp(pm);
+    const fixed=(this.state.fixedExpenses||[]).reduce((s,f)=>s+f.amount,0);
+    const instM=(this.state.installments||[]).reduce((s,i)=>s+i.monthlyPayment,0);
+    const savRate=inc>0?Math.round(bal/inc*100):0;
+    const recent=txs.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);
+    const cats=this.catExp(txs);
+    const topCat=Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];
+
+    document.getElementById('content').innerHTML=`
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div><h1 class="section-title gt">לוח מחוונים</h1><p style="color:var(--mu);font-size:14px">בחר תקופה לצפייה בנתונים</p></div>
+        <button class="btn btn-primary" onclick="App.openAddTransaction()">＋ עסקה חדשה</button>
+      </div>
+      <div class="card" style="margin-bottom:20px;padding:16px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:700;color:var(--mu)">תקופה:</span>
+          ${['month','3months','6months','year','custom'].map(pp=>`<button class="period-btn${p===pp?' active':''}" onclick="App.setPeriod('${pp}')">${pp==='month'?'החודש':pp==='3months'?'3 חודשים':pp==='6months'?'6 חודשים':pp==='year'?'השנה':'מותאם'}</button>`).join('')}
+          ${p==='custom'?`<input type="date" class="input" value="${from}" style="width:auto;font-size:13px" onchange="App.state.dashFrom=this.value;App.render()"><span style="color:var(--mu)">עד</span><input type="date" class="input" value="${to}" style="width:auto;font-size:13px" onchange="App.state.dashTo=this.value;App.render()">`:''} 
+          <span class="badge badge-pr" style="margin-right:auto">${this.periodLabel(p,from,to)}</span>
+        </div>
+      </div>
+      <div class="grid4" style="margin-bottom:20px">
+        <div class="card card-hover" style="border-right:4px solid var(--inc)">
+          <div class="label">הכנסות</div>
+          <div style="font-size:26px;font-weight:900;color:var(--inc)">${this.fc(inc)}</div>
+          ${p==='month'?`<div style="font-size:12px;color:var(--mu);margin-top:4px">${inc>=pInc?'▲':'▼'} ${this.fc(Math.abs(inc-pInc))} vs חודש שעבר</div>`:''}
+        </div>
+        <div class="card card-hover" style="border-right:4px solid var(--exp)">
+          <div class="label">הוצאות</div>
+          <div style="font-size:26px;font-weight:900;color:var(--exp)">${this.fc(exp)}</div>
+          ${p==='month'?`<div style="font-size:12px;color:var(--mu);margin-top:4px">${exp<=pExp?'▼':'▲'} ${this.fc(Math.abs(exp-pExp))} vs חודש שעבר</div>`:''}
+        </div>
+        <div class="card card-hover" style="border-right:4px solid ${bal>=0?'var(--inc)':'var(--exp)'}">
+          <div class="label">יתרה</div>
+          <div style="font-size:26px;font-weight:900;color:${bal>=0?'var(--inc)':'var(--exp)'}">${this.fc(bal)}</div>
+          <div style="font-size:12px;color:var(--mu);margin-top:4px">חיסכון: <strong style="color:${savRate>=20?'var(--inc)':savRate>=10?'var(--wrn)':'var(--exp)'}">${savRate}%</strong></div>
+        </div>
+        <div class="card card-hover" style="border-right:4px solid #a855f7">
+          <div class="label">שווי נטו</div>
+          <div style="font-size:26px;font-weight:900;color:#7c3aed">${this.fc(this.netWorth())}</div>
+          <div style="font-size:12px;color:var(--mu);margin-top:4px">השקעות + חיסכון - חובות</div>
+        </div>
+      </div>
+      <div class="grid2" style="margin-bottom:20px">
+        <div class="card"><div style="font-weight:700;font-size:15px;margin-bottom:14px">📊 הכנסות vs הוצאות — 6 חודשים</div><div class="chart-box"><canvas id="barChart"></canvas></div></div>
+        <div class="card"><div style="font-weight:700;font-size:15px;margin-bottom:14px">🍩 הוצאות לפי קטגוריה</div><div class="chart-box"><canvas id="pieChart"></canvas></div></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div style="font-weight:700;font-size:15px">עסקאות אחרונות</div>
+            <button class="btn btn-ghost btn-sm" onclick="App.goto('transactions')">הכל ←</button>
+          </div>
+          ${recent.map(t=>`<div class="row" style="gap:10px;padding:10px 8px">
+            <div style="font-size:18px">${t.type==='income'?'💚':'🔴'}</div>
+            <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.note||t.category}</div><div style="font-size:11px;color:var(--mu)">${t.category} · ${this.fd(t.date)}</div></div>
+            <div class="${t.type==='income'?'num-inc':'num-exp'}" style="font-size:14px;white-space:nowrap">${t.type==='income'?'+':'-'}${this.fc(t.amount)}</div>
+          </div>`).join('')}
+          ${recent.length===0?'<div style="text-align:center;color:var(--mu);padding:30px">אין עסקאות בתקופה</div>':''}
+        </div>
+        <div class="card">
+          <div style="font-weight:700;font-size:15px;margin-bottom:14px">📋 סיכום</div>
+          <div class="row" style="gap:10px;padding:10px 8px"><span style="color:var(--mu);flex:1;font-size:14px">עסקאות בתקופה</span><strong>${txs.length}</strong></div>
+          <div class="row" style="gap:10px;padding:10px 8px"><span style="color:var(--mu);flex:1;font-size:14px">הוצאות קבועות/חודש</span><strong style="color:var(--wrn)">${this.fc(fixed)}</strong></div>
+          <div class="row" style="gap:10px;padding:10px 8px"><span style="color:var(--mu);flex:1;font-size:14px">תשלומים/חודש</span><strong style="color:var(--wrn)">${this.fc(instM)}</strong></div>
+          <div class="row" style="gap:10px;padding:10px 8px;border-bottom:none"><span style="color:var(--mu);flex:1;font-size:14px">הוצאה מובילה</span><strong style="color:var(--exp)">${topCat?topCat[0]+' '+this.fc(topCat[1]):'-'}</strong></div>
+          <div class="divider"></div>
+          <button class="btn btn-primary" style="width:100%" onclick="App.goto('ai')">🤖 ניתוח AI</button>
+        </div>
+      </div>`;
+    this.initBarChart();this.initPieChart(cats);
+  },
+
+  setPeriod(p){this.state.dashPeriod=p;if(p!=='custom'){this.state.dashFrom='';this.state.dashTo='';}this.save();this.render()},
+
+  initBarChart(){
+    const m=this.curMonth();
+    const months=[5,4,3,2,1,0].map(i=>this.prevM(m,i));
+    const labels=months.map(mo=>new Date(mo+'-01').toLocaleDateString('he-IL',{month:'short',year:'2-digit'}));
+    const ctx=document.getElementById('barChart');if(!ctx)return;
+    this.charts.bar=new Chart(ctx,{type:'bar',data:{labels,datasets:[
+      {label:'הכנסות',data:months.map(mo=>this.monthInc(mo)),backgroundColor:'rgba(5,150,105,.7)',borderRadius:6,borderSkipped:false},
+      {label:'הוצאות',data:months.map(mo=>this.monthExp(mo)),backgroundColor:'rgba(220,38,38,.65)',borderRadius:6,borderSkipped:false}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#64748b',font:{family:'Heebo',size:12}}}},scales:{x:{ticks:{color:'#94a3b8'},grid:{color:'rgba(226,232,240,.7)'}},y:{ticks:{color:'#94a3b8',callback:v=>'₪'+v.toLocaleString()},grid:{color:'rgba(226,232,240,.7)'}}}}});
+  },
+
+  initPieChart(cats){
+    const entries=Object.entries(cats||{}).sort((a,b)=>b[1]-a[1]).slice(0,7);
+    if(!entries.length)return;
+    const ctx=document.getElementById('pieChart');if(!ctx)return;
+    const C=['#6d28d9','#059669','#dc2626','#d97706','#3b82f6','#ec4899','#06b6d4'];
+    this.charts.pie=new Chart(ctx,{type:'doughnut',data:{labels:entries.map(e=>e[0]),datasets:[{data:entries.map(e=>e[1]),backgroundColor:C,borderWidth:2,borderColor:'#fff',hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'left',labels:{color:'#64748b',font:{family:'Heebo',size:11},padding:8,boxWidth:12,usePointStyle:true}}}}});
+  },
+
+  // ── TRANSACTIONS ──
+  renderTransactions(){
+    const f=this.state.filter||{};
+    let txs=(this.state.transactions||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+    if(f.month)txs=txs.filter(t=>t.date.slice(0,7)===f.month);
+    if(f.type&&f.type!=='all')txs=txs.filter(t=>t.type===f.type);
+    if(f.cat)txs=txs.filter(t=>t.category===f.cat);
+    const inc=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+    const exp=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    const cats=[...(this.state.categories?.income||[]),...(this.state.categories?.expense||[])];
+    document.getElementById('content').innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <h1 class="section-title gt">עסקאות</h1>
+        <div style="display:flex;gap:10px"><button class="btn btn-ghost" onclick="App.goto('import')">📂 ייבוא</button><button class="btn btn-primary" onclick="App.openAddTransaction()">＋ הוסף</button></div>
+      </div>
+      <div class="card" style="margin-bottom:16px;padding:16px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+          <div style="min-width:140px"><div class="label">חודש</div><input type="month" class="input" value="${f.month||''}" onchange="App.state.filter.month=this.value;App.renderTransactions()"></div>
+          <div style="min-width:110px"><div class="label">סוג</div><select class="select" onchange="App.state.filter.type=this.value;App.renderTransactions()"><option value="all"${!f.type||f.type==='all'?' selected':''}>הכל</option><option value="income"${f.type==='income'?' selected':''}>הכנסות</option><option value="expense"${f.type==='expense'?' selected':''}>הוצאות</option></select></div>
+          <div style="min-width:140px"><div class="label">קטגוריה</div><select class="select" onchange="App.state.filter.cat=this.value;App.renderTransactions()"><option value="">הכל</option>${cats.map(c=>`<option value="${c}"${f.cat===c?' selected':''}>${c}</option>`).join('')}</select></div>
+          <button class="btn btn-ghost btn-sm" onclick="App.state.filter={month:'',type:'all',cat:''};App.renderTransactions()" style="align-self:flex-end">נקה</button>
+        </div>
+      </div>
+      <div class="grid3" style="margin-bottom:16px">
+        <div class="card" style="text-align:center;border-right:3px solid var(--inc)"><div class="label">הכנסות</div><div style="font-size:22px;font-weight:800;color:var(--inc)">${this.fc(inc)}</div></div>
+        <div class="card" style="text-align:center;border-right:3px solid var(--exp)"><div class="label">הוצאות</div><div style="font-size:22px;font-weight:800;color:var(--exp)">${this.fc(exp)}</div></div>
+        <div class="card" style="text-align:center;border-right:3px solid ${inc-exp>=0?'var(--inc)':'var(--exp)'}"><div class="label">יתרה</div><div style="font-size:22px;font-weight:800;color:${inc-exp>=0?'var(--inc)':'var(--exp)'}">${this.fc(inc-exp)}</div></div>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;color:var(--mu);margin-bottom:12px">${txs.length} עסקאות</div>
+        ${txs.map(t=>`<div class="row" style="gap:10px;padding:12px 8px">
+          <div style="font-size:18px">${t.type==='income'?'💚':'🔴'}</div>
+          <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:600">${t.note||'—'}</div><div style="font-size:12px;color:var(--mu)">${this.fd(t.date)}</div></div>
+          <span class="badge ${t.type==='income'?'badge-inc':'badge-exp'}">${t.category}</span>
+          <div class="${t.type==='income'?'num-inc':'num-exp'}" style="min-width:90px;text-align:left;font-size:14px">${t.type==='income'?'+':'-'}${this.fc(t.amount)}</div>
+          <button class="btn btn-ghost btn-sm" onclick="App.openAddTransaction(${t.id})">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="App.deleteTx(${t.id})">🗑️</button>
+        </div>`).join('')}
+        ${txs.length===0?'<div style="text-align:center;color:var(--mu);padding:40px">אין עסקאות תואמות</div>':''}
+      </div>`;
+  },
+
+  openAddTransaction(id){
+    const tx=id?(this.state.transactions||[]).find(t=>t.id===id):null;
+    const cats=this.state.categories||DEF_CATS;
+    const mkOpts=type=>(cats[type]||[]).map(c=>`<option${tx?.category===c?' selected':''}>${c}</option>`).join('');
+    this.openModal(`
+      <div style="display:flex;gap:8px;margin-bottom:18px;background:var(--card2);padding:5px;border-radius:11px;border:1px solid var(--border)">
+        <button id="bI" class="btn btn-sm ${!tx||tx.type==='income'?'btn-primary':'btn-ghost'}" style="flex:1" onclick="document.getElementById('bI').className='btn btn-sm btn-primary';document.getElementById('bE').className='btn btn-sm btn-ghost';document.getElementById('txT').value='income';App.refreshTxCats()">💚 הכנסה</button>
+        <button id="bE" class="btn btn-sm ${tx?.type==='expense'?'btn-primary':'btn-ghost'}" style="flex:1" onclick="document.getElementById('bE').className='btn btn-sm btn-primary';document.getElementById('bI').className='btn btn-sm btn-ghost';document.getElementById('txT').value='expense';App.refreshTxCats()">🔴 הוצאה</button>
+      </div>
+      <input type="hidden" id="txT" value="${tx?.type||'income'}">
+      <input type="hidden" id="txId" value="${id||''}">
+      <div style="display:grid;gap:14px">
+        <div><div class="label">סכום (₪)</div><input class="input" type="number" id="txAmt" value="${tx?.amount||''}" placeholder="0" style="font-size:20px;font-weight:700;text-align:center"></div>
+        <div class="grid2">
+          <div><div class="label">תאריך</div><input class="input" type="date" id="txDate" value="${tx?.date||new Date().toISOString().slice(0,10)}"></div>
+          <div><div class="label">קטגוריה</div><select class="select" id="txCat">${mkOpts(tx?.type||'income')}</select></div>
+        </div>
+        <div><div class="label">הערה</div><input class="input" id="txNote" value="${tx?.note||''}" placeholder="תיאור..."></div>
+        <button class="btn btn-primary" style="width:100%;padding:13px;font-size:15px" onclick="App.saveTx()">💾 שמור</button>
+      </div>`,tx?'ערוך עסקה':'עסקה חדשה');
+  },
+
+  refreshTxCats(){
+    const type=document.getElementById('txT').value;
+    document.getElementById('txCat').innerHTML=((this.state.categories||DEF_CATS)[type]||[]).map(c=>`<option>${c}</option>`).join('');
+  },
+
+  saveTx(){
+    const id=document.getElementById('txId').value;
+    const tx={id:id?+id:Date.now(),type:document.getElementById('txT').value,amount:+document.getElementById('txAmt').value,date:document.getElementById('txDate').value,category:document.getElementById('txCat').value,note:document.getElementById('txNote').value};
+    if(!tx.amount||!tx.date||!tx.category)return alert('יש למלא סכום, תאריך וקטגוריה');
+    if(id){const i=(this.state.transactions||[]).findIndex(t=>t.id===+id);if(i>=0)this.state.transactions[i]=tx;}
+    else{this.state.transactions=this.state.transactions||[];this.state.transactions.unshift(tx);}
+    this.save();this.closeModal();this.render();
+  },
+
+  deleteTx(id){if(!confirm('למחוק?'))return;this.state.transactions=(this.state.transactions||[]).filter(t=>t.id!==id);this.save();this.render()},
+
+  // ── IMPORT ──
+  renderImport(){
+    document.getElementById('content').innerHTML=`
+      <h1 class="section-title gt" style="margin-bottom:6px">ייבוא נתוני בנק</h1>
+      <p class="section-sub">הורד CSV מהבנק שלך וייבא אוטומטית</p>
+      <div class="card" style="border-right:4px solid var(--prl);margin-bottom:20px;background:var(--prllight)">
+        <div style="font-weight:700;font-size:15px;color:var(--pr);margin-bottom:8px">🏦 חיבור ישיר לבנק — מה אפשרי?</div>
+        <div style="font-size:13px;color:var(--txt2);line-height:1.8">חיבור API ישיר לבנקים ישראלים דורש רישיון ושרת backend. <strong>הפתרון:</strong> כל בנק מאפשר הורדת CSV — הטען אותו כאן.</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+          ${[['בנק הפועלים','פעולות → ייצוא → CSV'],['בנק לאומי','חשבון → תנועות → הורדה'],['דיסקונט','דוחות → ייצוא'],['מזרחי-טפחות','תנועות → ייצוא'],['מקס','my.max.co.il → עסקאות → ייצוא'],['ויזה Cal','cal-online.co.il → עסקאות → ייצוא']].map(([b,h])=>`<div class="card2" style="flex:1;min-width:160px"><div style="font-weight:700;font-size:13px">${b}</div><div style="font-size:11px;color:var(--mu)">${h}</div></div>`).join('')}
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('csvFile').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="App.handleDrop(event)">
+          <div style="font-size:40px;margin-bottom:10px">📂</div>
+          <div style="font-weight:700;font-size:16px;color:var(--txt);margin-bottom:4px">גרור קובץ CSV לכאן</div>
+          <div style="font-size:13px;color:var(--mu)">או לחץ לבחירת קובץ · CSV / TXT</div>
+        </div>
+        <input type="file" id="csvFile" accept=".csv,.txt" style="display:none" onchange="App.loadCSV(this)">
+      </div>
+      <div id="csvPreview"></div>`;
+  },
+
+  handleDrop(e){e.preventDefault();document.getElementById('dropZone').classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)this.processCSV(f)},
+  loadCSV(input){const f=input.files[0];if(f)this.processCSV(f)},
+
+  processCSV(file){
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const text=e.target.result;
+      const lines=text.split('\n').filter(l=>l.trim());
+      if(lines.length<2){alert('הקובץ ריק');return;}
+      const sep=lines[0].includes('\t')?'\t':',';
+      const headers=lines[0].split(sep).map(h=>h.trim().replace(/"/g,''));
+      const rows=lines.slice(1).map(l=>l.split(sep).map(c=>c.trim().replace(/"/g,'')));
+      window._csvRows=rows;window._csvHeaders=headers;
+      const hOpts=headers.map((h,i)=>`<option value="${i}">${h}</option>`).join('');
+      const none='<option value="-1">-- לא רלוונטי --</option>';
+      const defCats=(this.state.categories?.expense||DEF_CATS.expense);
+      document.getElementById('csvPreview').innerHTML=`
+        <div class="card" style="margin-bottom:16px">
+          <div style="font-weight:700;font-size:15px;margin-bottom:14px">📋 מיפוי עמודות</div>
+          <div class="grid2" style="margin-bottom:16px">
+            <div><div class="label">תאריך</div><select class="select" id="mDate">${none}${hOpts}</select></div>
+            <div><div class="label">תיאור</div><select class="select" id="mDesc">${none}${hOpts}</select></div>
+            <div><div class="label">חיוב (הוצאה)</div><select class="select" id="mDebit">${none}${hOpts}</select></div>
+            <div><div class="label">זיכוי (הכנסה)</div><select class="select" id="mCredit">${none}${hOpts}</select></div>
+            <div><div class="label">סכום משולב</div><select class="select" id="mAmt">${none}${hOpts}</select></div>
+            <div><div class="label">קטגוריה ברירת מחדל</div><select class="select" id="mCat">${defCats.map(c=>`<option>${c}</option>`).join('')}</select></div>
+          </div>
+          <button class="btn btn-primary" style="width:100%;padding:12px" onclick="App.doImport()">✅ ייבא עסקאות</button>
+        </div>
+        <div class="card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--mu)">תצוגה מקדימה</div>
+          <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">
+            <tr>${headers.map(h=>`<th style="padding:6px 10px;text-align:right;color:var(--mu);border-bottom:1px solid var(--border)">${h}</th>`).join('')}</tr>
+            ${rows.slice(0,5).map(row=>`<tr>${row.map(c=>`<td style="padding:6px 10px;border-bottom:1px solid var(--border);color:var(--txt2)">${c}</td>`).join('')}</tr>`).join('')}
+          </table></div>
+        </div>`;
+    };
+    reader.readAsText(file,'UTF-8');
+  },
+
+  doImport(){
+    const rows=window._csvRows;if(!rows?.length){alert('אין נתונים');return;}
+    const gi=id=>+document.getElementById(id).value;
+    const [dateIdx,descIdx,debitIdx,creditIdx,amtIdx]=['mDate','mDesc','mDebit','mCredit','mAmt'].map(gi);
+    const defCat=document.getElementById('mCat').value;
+    if(dateIdx<0)return alert('יש לבחור עמודת תאריך');
+    if(amtIdx<0&&debitIdx<0&&creditIdx<0)return alert('יש לבחור לפחות עמודת סכום');
+    let count=0;const txs=this.state.transactions||[];
+    const parseAmt=v=>Math.abs(+(v||'').replace(/[,₪\s]/g,'')||0);
+    rows.forEach(row=>{
+      const raw=row[dateIdx]||'';let date='';
+      const m=raw.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+      if(m){const yr=m[3].length===2?'20'+m[3]:m[3];date=`${yr}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;}
+      else if(/^\d{4}-\d{2}-\d{2}$/.test(raw))date=raw;
+      if(!date)return;
+      const note=descIdx>=0?row[descIdx]:'';
+      if(amtIdx>=0){
+        const n=+(row[amtIdx]||'').replace(/[,₪\s]/g,'');if(!n)return;
+        txs.unshift({id:Date.now()+count,date,type:n<0?'expense':'income',amount:Math.abs(n),category:defCat,note});count++;
+      }else{
+        const d=debitIdx>=0?parseAmt(row[debitIdx]):0,cr=creditIdx>=0?parseAmt(row[creditIdx]):0;
+        if(d>0){txs.unshift({id:Date.now()+count,date,type:'expense',amount:d,category:defCat,note});count++;}
+        if(cr>0){txs.unshift({id:Date.now()+count+1,date,type:'income',amount:cr,category:defCat,note});count++;}
+      }
+    });
+    this.state.transactions=txs;this.save();
+    alert(`יובאו ${count} עסקאות ✅`);this.goto('transactions');
+  },
+
+  // ── CATEGORIES ──
+  renderCategories(){
+    const cats=this.state.categories||DEF_CATS,tab=this.state.tab.cats||'income';
+    document.getElementById('content').innerHTML=`
+      <h1 class="section-title gt" style="margin-bottom:16px">קטגוריות</h1>
+      <div class="tabs"><div class="tab${tab==='income'?' active':''}" onclick="App.state.tab.cats='income';App.renderCategories()">💚 הכנסות</div><div class="tab${tab==='expense'?' active':''}" onclick="App.state.tab.cats='expense';App.renderCategories()">🔴 הוצאות</div></div>
+      <div class="card">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px">
+          ${(cats[tab]||[]).map((c,i)=>`<div style="display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:8px 14px">
+            <span style="font-size:14px;font-weight:600">${c}</span>
+            <button onclick="App.deleteCat('${tab}',${i})" style="background:var(--expbg);border:1px solid var(--expborder);color:var(--exp);width:20px;height:20px;border-radius:5px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center">✕</button>
+          </div>`).join('')}
+        </div>
+        <div class="divider"></div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <input class="input" id="newCat" placeholder="שם קטגוריה חדשה..." style="max-width:280px" onkeydown="if(event.key==='Enter')App.addCat('${tab}')">
+          <button class="btn btn-primary" onclick="App.addCat('${tab}')">＋ הוסף</button>
+        </div>
+      </div>`;
+  },
+  addCat(type){
+    const v=document.getElementById('newCat').value.trim();if(!v)return;
+    this.state.categories=this.state.categories||JSON.parse(JSON.stringify(DEF_CATS));
+    if(!(this.state.categories[type]||[]).includes(v)){this.state.categories[type]=this.state.categories[type]||[];this.state.categories[type].push(v);this.save();}
+    this.renderCategories();
+  },
+  deleteCat(type,i){if(!confirm('למחוק?'))return;this.state.categories[type].splice(i,1);this.save();this.renderCategories()},
+
+  // ── FIXED EXPENSES ──
+  renderFixed(){
+    const fx=this.state.fixedExpenses||[],total=fx.reduce((s,f)=>s+f.amount,0);
+    const inc=this.monthInc(this.curMonth());
+    document.getElementById('content').innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div><h1 class="section-title gt">הוצאות קבועות</h1><p style="color:var(--mu);font-size:14px">סה"כ: <strong style="color:var(--wrn)">${this.fc(total)}</strong>${inc?' · '+Math.round(total/inc*100)+'% מהכנסה':''}</p></div>
+        <button class="btn btn-primary" onclick="App.openFixedModal()">＋ הוסף</button>
+      </div>
+      <div class="card">
+        ${fx.map(f=>`<div class="row" style="gap:12px;padding:14px 8px">
+          <div style="width:38px;height:38px;border-radius:10px;background:var(--wrnbg);border:1px solid var(--wrnborder);display:flex;align-items:center;justify-content:center;font-size:18px">📌</div>
+          <div style="flex:1"><div style="font-weight:700;font-size:14px">${f.name}</div><div style="font-size:12px;color:var(--mu)">יום ${f.day} לחודש · <span class="badge badge-gray">${f.category}</span></div></div>
+          <div style="font-size:18px;font-weight:800;color:var(--exp)">${this.fc(f.amount)}</div>
+          <button class="btn btn-ghost btn-sm" onclick="App.openFixedModal(${f.id})">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="App.deleteFixed(${f.id})">🗑️</button>
+        </div>`).join('')}
+        ${fx.length===0?'<div style="text-align:center;color:var(--mu);padding:40px">אין הוצאות קבועות</div>':''}
+      </div>`;
+  },
+  openFixedModal(id){
+    const f=id?(this.state.fixedExpenses||[]).find(x=>x.id===id):null;
+    const cats=this.state.categories?.expense||DEF_CATS.expense;
+    this.openModal(`<div style="display:grid;gap:14px">
+      <input type="hidden" id="fxId" value="${id||''}">
+      <div><div class="label">שם</div><input class="input" id="fxName" value="${f?.name||''}" placeholder="שכירות, חשמל..."></div>
+      <div class="grid2">
+        <div><div class="label">סכום (₪)</div><input class="input" type="number" id="fxAmt" value="${f?.amount||''}"></div>
+        <div><div class="label">יום בחודש</div><input class="input" type="number" id="fxDay" value="${f?.day||1}" min="1" max="31"></div>
+      </div>
+      <div><div class="label">קטגוריה</div><select class="select" id="fxCat">${cats.map(c=>`<option${f?.category===c?' selected':''}>${c}</option>`).join('')}</select></div>
+      <button class="btn btn-primary" style="width:100%;padding:12px" onclick="App.saveFixed()">💾 שמור</button>
+    </div>`,f?'ערוך':'הוצאה קבועה חדשה');
+  },
+  saveFixed(){
+    const id=document.getElementById('fxId').value;
+    const f={id:id?+id:Date.now(),name:document.getElementById('fxName').value,amount:+document.getElementById('fxAmt').value,day:+document.getElementById('fxDay').value,category:document.getElementById('fxCat').value};
+    if(!f.name||!f.amount)return alert('שם וסכום הם חובה');
+    if(id){const i=(this.state.fixedExpenses||[]).findIndex(x=>x.id===+id);if(i>=0)this.state.fixedExpenses[i]=f;}
+    else{this.state.fixedExpenses=this.state.fixedExpenses||[];this.state.fixedExpenses.push(f);}
+    this.save();this.closeModal();this.renderFixed();
+  },
+  deleteFixed(id){if(!confirm('למחוק?'))return;this.state.fixedExpenses=(this.state.fixedExpenses||[]).filter(f=>f.id!==id);this.save();this.renderFixed()},
+
+  // ── INSTALLMENTS ──
+  renderInstallments(){
+    const inst=this.state.installments||[];
+    const monthly=inst.reduce((s,i)=>s+i.monthlyPayment,0);
+    const totalRem=inst.reduce((s,i)=>s+Math.max(0,i.totalAmount-i.paidCount*i.monthlyPayment),0);
+    document.getElementById('content').innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div><h1 class="section-title gt">תשלומים</h1><p style="color:var(--mu);font-size:14px">חודשי: <strong style="color:var(--wrn)">${this.fc(monthly)}</strong> · יתרה: <strong style="color:var(--exp)">${this.fc(totalRem)}</strong></p></div>
+        <button class="btn btn-primary" onclick="App.openInstModal()">＋ הוסף</button>
+      </div>
+      <div style="display:grid;gap:14px">
+        ${inst.map(i=>{const paid=i.paidCount*i.monthlyPayment,rem=Math.max(0,i.totalAmount-paid),pct=Math.min(100,Math.round(i.paidCount/i.totalCount*100));const col=pct>=80?'var(--inc)':pct>=40?'var(--wrn)':'var(--pr)';return`<div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+            <div><div style="font-weight:700;font-size:15px">💳 ${i.name}</div><div style="font-size:12px;color:var(--mu);margin-top:3px"><span class="badge badge-gray">${i.category}</span> · ${i.paidCount}/${i.totalCount} תשלומים</div></div>
+            <div style="text-align:left"><div style="font-size:20px;font-weight:800;color:var(--wrn)">${this.fc(i.monthlyPayment)}<span style="font-size:12px;font-weight:400;color:var(--mu)">/חודש</span></div><div style="font-size:12px;color:var(--mu)">נותר ${this.fc(rem)}</div></div>
+          </div>
+          <div class="progress"><div class="progress-fill" style="width:${pct}%;background:${col}"></div></div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px"><span style="font-weight:700;color:${col}">${pct}%</span><span style="color:var(--mu)">סה"כ ${this.fc(i.totalAmount)}</span></div>
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <button class="btn btn-success btn-sm" onclick="App.payInst(${i.id})" ${i.paidCount>=i.totalCount?'disabled style="opacity:.5"':''}>✓ בוצע</button>
+            <button class="btn btn-ghost btn-sm" onclick="App.openInstModal(${i.id})">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="App.deleteInst(${i.id})">🗑️</button>
+            ${i.paidCount>=i.totalCount?'<span class="badge badge-inc">✅ הושלם</span>':''}
+          </div>
+        </div>`;}).join('')}
+        ${inst.length===0?'<div class="card" style="text-align:center;color:var(--mu);padding:40px">אין תשלומים פעילים</div>':''}
+      </div>`;
+  },
+  openInstModal(id){
+    const i=id?(this.state.installments||[]).find(x=>x.id===id):null;
+    const cats=this.state.categories?.expense||DEF_CATS.expense;
+    this.openModal(`<div style="display:grid;gap:14px">
+      <input type="hidden" id="instId" value="${id||''}">
+      <div><div class="label">שם</div><input class="input" id="instName" value="${i?.name||''}" placeholder="מחשב, טלפון..."></div>
+      <div class="grid2">
+        <div><div class="label">סה"כ (₪)</div><input class="input" type="number" id="instTotal" value="${i?.totalAmount||''}"></div>
+        <div><div class="label">תשלום חודשי (₪)</div><input class="input" type="number" id="instMonthly" value="${i?.monthlyPayment||''}"></div>
+      </div>
+      <div class="grid2">
+        <div><div class="label">מס' תשלומים</div><input class="input" type="number" id="instCount" value="${i?.totalCount||''}" min="1"></div>
+        <div><div class="label">שולמו עד כה</div><input class="input" type="number" id="instPaid" value="${i?.paidCount||0}" min="0"></div>
+      </div>
+      <div><div class="label">קטגוריה</div><select class="select" id="instCat">${cats.map(c=>`<option${i?.category===c?' selected':''}>${c}</option>`).join('')}</select></div>
+      <button class="btn btn-primary" style="width:100%;padding:12px" onclick="App.saveInst()">💾 שמור</button>
+    </div>`,id?'ערוך':'תשלומים חדשים');
+  },
+  saveInst(){
+    const id=document.getElementById('instId').value;
+    const i={id:id?+id:Date.now(),name:document.getElementById('instName').value,totalAmount:+document.getElementById('instTotal').value,monthlyPayment:+document.getElementById('instMonthly').value,totalCount:+document.getElementById('instCount').value,paidCount:+document.getElementById('instPaid').value,category:document.getElementById('instCat').value};
+    if(!i.name||!i.totalAmount||!i.totalCount)return alert('מלא את כל השדות');
+    if(id){const idx=(this.state.installments||[]).findIndex(x=>x.id===+id);if(idx>=0)this.state.installments[idx]=i;}
+    else{this.state.installments=this.state.installments||[];this.state.installments.push(i);}
+    this.save();this.closeModal();this.renderInstallments();
+  },
+  payInst(id){
+    const i=(this.state.installments||[]).find(x=>x.id===id);if(!i||i.paidCount>=i.totalCount)return;
+    i.paidCount++;
+    this.state.transactions=this.state.transactions||[];
+    this.state.transactions.unshift({id:Date.now(),type:'expense',amount:i.monthlyPayment,date:new Date().toISOString().slice(0,10),category:i.category,note:`תשלום ${i.paidCount}/${i.totalCount} — ${i.name}`});
+    this.save();this.renderInstallments();
+  },
+  deleteInst(id){if(!confirm('למחוק?'))return;this.state.installments=(this.state.installments||[]).filter(i=>i.id!==id);this.save();this.renderInstallments()},
+
+  // ── INVESTMENTS & SAVINGS ──
+  renderInvestments(){
+    const tab=this.state.tab.inv||'investments';
+    document.getElementById('content').innerHTML=`
+      <h1 class="section-title gt" style="margin-bottom:16px">השקעות וחסכונות</h1>
+      <div class="tabs">
+        <div class="tab${tab==='investments'?' active':''}" onclick="App.state.tab.inv='investments';App.renderInvestments()">📈 השקעות</div>
+        <div class="tab${tab==='savings'?' active':''}" onclick="App.state.tab.inv='savings';App.renderInvestments()">🏦 יעדי חיסכון</div>
+      </div><div id="invContent"></div>`;
+    tab==='investments'?this.renderInvList():this.renderSavList();
+  },
+
+  renderInvList(){
+    const inv=this.state.investments||[];
+    const tI=inv.reduce((s,i)=>s+i.invested,0),tC=inv.reduce((s,i)=>s+i.currentValue,0);
+    const ret=tI>0?((tC-tI)/tI*100).toFixed(1):0;
+    document.getElementById('invContent').innerHTML=`
+      <div class="grid3" style="margin-bottom:16px">
+        <div class="card" style="text-align:center;border-right:3px solid var(--prl)"><div class="label">הושקע</div><div style="font-size:22px;font-weight:800;color:var(--pr)">${this.fc(tI)}</div></div>
+        <div class="card" style="text-align:center;border-right:3px solid var(--inc)"><div class="label">שווי נוכחי</div><div style="font-size:22px;font-weight:800;color:var(--inc)">${this.fc(tC)}</div></div>
+        <div class="card" style="text-align:center;border-right:3px solid ${ret>=0?'var(--inc)':'var(--exp)'}"><div class="label">תשואה</div><div style="font-size:22px;font-weight:800;color:${ret>=0?'var(--inc)':'var(--exp)'}">${ret>=0?'+':''}${ret}%</div></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn btn-primary" onclick="App.openInvModal()">＋ השקעה</button></div>
+      <div class="card">
+        ${inv.map(i=>{const r=((i.currentValue-i.invested)/i.invested*100).toFixed(1);return`<div class="row" style="gap:12px;padding:14px 8px">
+          <div style="width:40px;height:40px;border-radius:10px;background:var(--prllight);border:1px solid #c4b5fd;display:flex;align-items:center;justify-content:center;font-size:20px">📈</div>
+          <div style="flex:1"><div style="font-weight:700;font-size:14px">${i.name}</div><div style="font-size:12px;color:var(--mu)"><span class="badge badge-pr">${i.type}</span> · ${this.fd(i.date)}</div></div>
+          <div style="text-align:left"><div style="font-weight:700;font-size:15px">${this.fc(i.currentValue)}</div><div style="font-size:12px;color:${r>=0?'var(--inc)':'var(--exp)'};font-weight:600">${r>=0?'▲':'▼'}${Math.abs(r)}%</div></div>
+          <button class="btn btn-ghost btn-sm" onclick="App.openInvModal(${i.id})">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="App.deleteInv(${i.id})">🗑️</button>
+        </div>`;}).join('')}
+        ${inv.length===0?'<div style="text-align:center;color:var(--mu);padding:40px">אין השקעות</div>':''}
+      </div>`;
+  },
+  openInvModal(id){
+    const inv=id?(this.state.investments||[]).find(i=>i.id===id):null;
+    const types=['מניות','קריפטו','קרן נאמנות','נדל"ן','אגרות חוב','פיקדון','קרן פנסיה','אחר'];
+    this.openModal(`<div style="display:grid;gap:14px">
+      <input type="hidden" id="invId" value="${id||''}">
+      <div><div class="label">שם</div><input class="input" id="invName" value="${inv?.name||''}" placeholder="תיק מניות, ביטקוין..."></div>
+      <div><div class="label">סוג</div><select class="select" id="invType">${types.map(t=>`<option${inv?.type===t?' selected':''}>${t}</option>`).join('')}</select></div>
+      <div class="grid2">
+        <div><div class="label">הושקע (₪)</div><input class="input" type="number" id="invInvested" value="${inv?.invested||''}"></div>
+        <div><div class="label">שווי נוכחי (₪)</div><input class="input" type="number" id="invCurrent" value="${inv?.currentValue||''}"></div>
+      </div>
+      <div><div class="label">תאריך</div><input class="input" type="date" id="invDate" value="${inv?.date||new Date().toISOString().slice(0,10)}"></div>
+      <button class="btn btn-primary" style="width:100%;padding:12px" onclick="App.saveInv()">💾 שמור</button>
+    </div>`,id?'ערוך':'השקעה חדשה');
+  },
+  saveInv(){
+    const id=document.getElementById('invId').value;
+    const i={id:id?+id:Date.now(),name:document.getElementById('invName').value,type:document.getElementById('invType').value,invested:+document.getElementById('invInvested').value,currentValue:+document.getElementById('invCurrent').value,date:document.getElementById('invDate').value};
+    if(!i.name||!i.invested)return alert('מלא שם וסכום');
+    if(id){const idx=(this.state.investments||[]).findIndex(x=>x.id===+id);if(idx>=0)this.state.investments[idx]=i;}
+    else{this.state.investments=this.state.investments||[];this.state.investments.push(i);}
+    this.save();this.closeModal();this.renderInvestments();
+  },
+  deleteInv(id){if(!confirm('למחוק?'))return;this.state.investments=(this.state.investments||[]).filter(i=>i.id!==id);this.save();this.renderInvestments()},
+
+  renderSavList(){
+    const sav=this.state.savings||[];
+    document.getElementById('invContent').innerHTML=`
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn btn-primary" onclick="App.openSavModal()">＋ יעד חדש</button></div>
+      <div style="display:grid;gap:14px">
+        ${sav.map(s=>{const pct=Math.min(100,Math.round(s.current/s.goal*100)),rem=s.goal-s.current,days=Math.ceil((new Date(s.deadline+'T12:00:00')-new Date())/864e5),col=pct>=80?'var(--inc)':pct>=40?'var(--wrn)':'var(--pr)';return`<div class="card">
+          <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+            <div><div style="font-weight:700;font-size:15px">🏦 ${s.name}</div><div style="font-size:12px;color:var(--mu);margin-top:3px">${days>0?days+' ימים נותרו':days===0?'היום!':'עבר המועד'} · ${this.fd(s.deadline)}</div></div>
+            <div style="text-align:left"><div style="font-weight:800;font-size:16px;color:var(--inc)">${this.fc(s.current)}</div><div style="font-size:12px;color:var(--mu)">מתוך ${this.fc(s.goal)}</div></div>
+          </div>
+          <div class="progress"><div class="progress-fill" style="width:${pct}%;background:${col}"></div></div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px"><span style="font-weight:700;color:${col}">${pct}%</span><span style="color:var(--mu)">נותר ${this.fc(rem)}</span></div>
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <button class="btn btn-primary btn-sm" onclick="App.addToSaving(${s.id})">＋ הפקד</button>
+            <button class="btn btn-ghost btn-sm" onclick="App.openSavModal(${s.id})">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="App.deleteSav(${s.id})">🗑️</button>
+          </div>
+        </div>`;}).join('')}
+        ${sav.length===0?'<div class="card" style="text-align:center;color:var(--mu);padding:40px">אין יעדי חיסכון</div>':''}
+      </div>`;
+  },
+  openSavModal(id){
+    const s=id?(this.state.savings||[]).find(x=>x.id===id):null;
+    this.openModal(`<div style="display:grid;gap:14px">
+      <input type="hidden" id="savId" value="${id||''}">
+      <div><div class="label">שם היעד</div><input class="input" id="savName" value="${s?.name||''}" placeholder="קרן חירום, חופשה..."></div>
+      <div class="grid2">
+        <div><div class="label">יעד (₪)</div><input class="input" type="number" id="savGoal" value="${s?.goal||''}"></div>
+        <div><div class="label">צבור (₪)</div><input class="input" type="number" id="savCurrent" value="${s?.current||0}"></div>
+      </div>
+      <div><div class="label">תאריך יעד</div><input class="input" type="date" id="savDeadline" value="${s?.deadline||''}"></div>
+      <button class="btn btn-primary" style="width:100%;padding:12px" onclick="App.saveSav()">💾 שמור</button>
+    </div>`,id?'ערוך':'יעד חיסכון חדש');
+  },
+  saveSav(){
+    const id=document.getElementById('savId').value;
+    const s={id:id?+id:Date.now(),name:document.getElementById('savName').value,goal:+document.getElementById('savGoal').value,current:+document.getElementById('savCurrent').value,deadline:document.getElementById('savDeadline').value};
+    if(!s.name||!s.goal)return alert('שם ויעד הם חובה');
+    if(id){const idx=(this.state.savings||[]).findIndex(x=>x.id===+id);if(idx>=0)this.state.savings[idx]=s;}
+    else{this.state.savings=this.state.savings||[];this.state.savings.push(s);}
+    this.save();this.closeModal();this.renderInvestments();
+  },
+  addToSaving(id){const s=(this.state.savings||[]).find(x=>x.id===id);if(!s)return;const amt=+prompt(`כמה להפקיד ל"${s.name}"? (₪)`);if(!amt||amt<=0)return;s.current=Math.min(s.goal,s.current+amt);this.save();this.renderInvestments()},
+  deleteSav(id){if(!confirm('למחוק?'))return;this.state.savings=(this.state.savings||[]).filter(s=>s.id!==id);this.save();this.renderInvestments()},
+
+  // ── LOANS ──
+  renderLoans(){
+    const tab=this.state.tab.loans||'owe',loans=this.state.loans||[];
+    const owe=loans.filter(l=>l.direction==='owe'&&!l.paid),owed=loans.filter(l=>l.direction==='owed'&&!l.paid),paid=loans.filter(l=>l.paid);
+    const tOwe=owe.reduce((s,l)=>s+l.remaining,0),tOwed=owed.reduce((s,l)=>s+l.remaining,0);
+    const list=tab==='owe'?owe:tab==='owed'?owed:paid;
+    document.getElementById('content').innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div><h1 class="section-title gt">הלוואות וחובות</h1><p style="color:var(--mu);font-size:14px">אני חייב: <strong style="color:var(--exp)">${this.fc(tOwe)}</strong> · חייבים לי: <strong style="color:var(--inc)">${this.fc(tOwed)}</strong></p></div>
+        <button class="btn btn-primary" onclick="App.openLoanModal()">＋ הוסף</button>
+      </div>
+      <div class="tabs">
+        <div class="tab${tab==='owe'?' active':''}" onclick="App.state.tab.loans='owe';App.renderLoans()">🔴 אני חייב (${owe.length})</div>
+        <div class="tab${tab==='owed'?' active':''}" onclick="App.state.tab.loans='owed';App.renderLoans()">💚 חייבים לי (${owed.length})</div>
+        <div class="tab${tab==='paid'?' active':''}" onclick="App.state.tab.loans='paid';App.renderLoans()">✅ שולמו</div>
+      </div>
+      <div style="display:grid;gap:12px">
+        ${list.map(l=>`<div class="card ${l.direction==='owe'&&!l.paid?'card-exp':!l.paid?'card-inc':''}">
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+            <div><div style="font-weight:700;font-size:15px">${l.direction==='owe'?'🔴':'💚'} ${l.person}</div><div style="font-size:12px;color:var(--mu);margin-top:3px">${l.note||''} · ${this.fd(l.date)}</div></div>
+            <div style="text-align:left"><div style="font-weight:800;font-size:18px;color:${l.direction==='owe'?'var(--exp)':'var(--inc)'}">${this.fc(l.remaining)}</div><div style="font-size:12px;color:var(--mu)">${l.interestRate?'ריבית '+l.interestRate+'%':'ללא ריבית'}</div></div>
+          </div>
+          ${l.monthlyPayment?`<div style="font-size:13px;color:var(--mu)">תשלום חודשי: <strong>${this.fc(l.monthlyPayment)}</strong></div>`:''}
+          ${!l.paid?`<div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn btn-success btn-sm" onclick="App.markLoanPaid(${l.id})">✓ סגור</button>
+            <button class="btn btn-ghost btn-sm" onclick="App.openLoanModal(${l.id})">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="App.deleteLoan(${l.id})">🗑️</button>
+          </div>`:`<span class="badge badge-inc" style="margin-top:8px;display:inline-flex">✅ שולם</span>`}
+        </div>`).join('')}
+        ${list.length===0?'<div class="card" style="text-align:center;color:var(--mu);padding:40px">אין רשומות</div>':''}
+      </div>`;
+  },
+  openLoanModal(id){
+    const l=id?(this.state.loans||[]).find(x=>x.id===id):null;
+    this.openModal(`<div style="display:grid;gap:14px">
+      <input type="hidden" id="lnId" value="${id||''}">
+      <div style="display:flex;gap:8px;background:var(--card2);padding:5px;border-radius:11px;border:1px solid var(--border)">
+        <button id="bOwe" class="btn btn-sm ${!l||l.direction==='owe'?'btn-primary':'btn-ghost'}" style="flex:1" onclick="document.getElementById('bOwe').className='btn btn-sm btn-primary';document.getElementById('bOwed').className='btn btn-sm btn-ghost';document.getElementById('lnDir').value='owe'">🔴 אני חייב</button>
+        <button id="bOwed" class="btn btn-sm ${l?.direction==='owed'?'btn-primary':'btn-ghost'}" style="flex:1" onclick="document.getElementById('bOwed').className='btn btn-sm btn-primary';document.getElementById('bOwe').className='btn btn-sm btn-ghost';document.getElementById('lnDir').value='owed'">💚 חייבים לי</button>
+      </div>
+      <input type="hidden" id="lnDir" value="${l?.direction||'owe'}">
+      <div><div class="label">שם</div><input class="input" id="lnPerson" value="${l?.person||''}" placeholder="שם / בנק..."></div>
+      <div class="grid2">
+        <div><div class="label">סכום מקורי (₪)</div><input class="input" type="number" id="lnAmt" value="${l?.amount||''}"></div>
+        <div><div class="label">יתרה (₪)</div><input class="input" type="number" id="lnRem" value="${l?.remaining||''}"></div>
+      </div>
+      <div class="grid2">
+        <div><div class="label">תשלום חודשי (₪)</div><input class="input" type="number" id="lnMonthly" value="${l?.monthlyPayment||0}"></div>
+        <div><div class="label">ריבית (%)</div><input class="input" type="number" id="lnRate" value="${l?.interestRate||0}" step="0.1"></div>
+      </div>
+      <div class="grid2">
+        <div><div class="label">תאריך</div><input class="input" type="date" id="lnDate" value="${l?.date||new Date().toISOString().slice(0,10)}"></div>
+        <div><div class="label">הערה</div><input class="input" id="lnNote" value="${l?.note||''}" placeholder="תיאור..."></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:12px" onclick="App.saveLoan()">💾 שמור</button>
+    </div>`,id?'ערוך':'הלוואה / חוב חדש');
+  },
+  saveLoan(){
+    const id=document.getElementById('lnId').value;
+    const l={id:id?+id:Date.now(),direction:document.getElementById('lnDir').value,person:document.getElementById('lnPerson').value,amount:+document.getElementById('lnAmt').value,remaining:+document.getElementById('lnRem').value,monthlyPayment:+document.getElementById('lnMonthly').value,interestRate:+document.getElementById('lnRate').value,date:document.getElementById('lnDate').value,note:document.getElementById('lnNote').value,paid:false};
+    if(!l.person||!l.amount)return alert('שם וסכום הם חובה');
+    if(id){const idx=(this.state.loans||[]).findIndex(x=>x.id===+id);if(idx>=0)this.state.loans[idx]={...this.state.loans[idx],...l};}
+    else{this.state.loans=this.state.loans||[];this.state.loans.push(l);}
+    this.save();this.closeModal();this.renderLoans();
+  },
+  markLoanPaid(id){const l=(this.state.loans||[]).find(x=>x.id===id);if(l){l.paid=true;l.remaining=0;}this.save();this.renderLoans()},
+  deleteLoan(id){if(!confirm('למחוק?'))return;this.state.loans=(this.state.loans||[]).filter(l=>l.id!==id);this.save();this.renderLoans()},
+
+  // ── AI ANALYSIS ──
+  renderAI(){
+    const m=this.curMonth(),pm=this.prevM(m);
+    const inc=this.monthInc(m),exp=this.monthExp(m),pExp=this.monthExp(pm),pInc=this.monthInc(pm);
+    const savRate=inc>0?Math.round((inc-exp)/inc*100):0;
+    const cats=this.catExp(this.monthTx(m));
+    const fixed=(this.state.fixedExpenses||[]).reduce((s,f)=>s+f.amount,0);
+    const instM=(this.state.installments||[]).reduce((s,i)=>s+i.monthlyPayment,0);
+    const totalDebt=(this.state.loans||[]).filter(l=>l.direction==='owe'&&!l.paid).reduce((s,l)=>s+l.remaining,0);
+    const totalOwed=(this.state.loans||[]).filter(l=>l.direction==='owed'&&!l.paid).reduce((s,l)=>s+l.remaining,0);
+    const inv=this.state.investments||[];
+    const tInv=inv.reduce((s,i)=>s+i.invested,0),tCur=inv.reduce((s,i)=>s+i.currentValue,0);
+    let score=50;
+    if(savRate>=20)score+=20;else if(savRate>=10)score+=10;else if(savRate<0)score-=25;
+    if(inc>0&&fixed/inc<0.5)score+=10;else if(inc>0&&fixed/inc>0.7)score-=15;
+    if(inc>0&&totalDebt<inc*6)score+=10;else if(inc>0&&totalDebt>inc*24)score-=15;
+    if(tInv>0)score+=10;
+    if((this.state.savings||[]).find(s=>s.name.includes('חירום')&&s.current>=inc*3))score+=10;
+    score=Math.max(5,Math.min(100,score));
+    const sc=score>=70?['var(--inc)','מצוין 🎉']:score>=40?['var(--wrn)','טוב 👍']:['var(--exp)','דורש שיפור ⚠️'];
+    const insights=[];
+    if(inc>0&&savRate<10)insights.push({t:'exp',i:'⚠️',ti:'שיעור חיסכון נמוך',b:`חוסך ${savRate}% בלבד. מומלץ לשאוף ל-20%.`});
+    if(savRate>=20)insights.push({t:'inc',i:'✅',ti:'שיעור חיסכון מצוין',b:`חוסך ${savRate}% — מעל המומלץ! שקול להשקיע את העודף.`});
+    if(pExp>0&&exp>pExp*1.15)insights.push({t:'exp',i:'📈',ti:'עלייה בהוצאות',b:`הוצאות עלו ב-${Math.round((exp-pExp)/pExp*100)}% לעומת חודש שעבר.`});
+    if(pInc>0&&inc>pInc*1.1)insights.push({t:'inc',i:'🎯',ti:'עלייה בהכנסות',b:`הכנסות עלו ב-${Math.round((inc-pInc)/pInc*100)}%. שקול להגדיל חיסכון.`});
+    const top=Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];
+    if(top&&inc>0&&top[1]/inc>.25)insights.push({t:'wrn',i:'💡',ti:`הוצאה גדולה: ${top[0]}`,b:`${this.fc(top[1])} — ${Math.round(top[1]/inc*100)}% מהכנסתך.`});
+    if(inc>0&&fixed/inc>.5)insights.push({t:'wrn',i:'🔒',ti:'הוצאות קבועות גבוהות',b:`${this.fc(fixed)} = ${Math.round(fixed/inc*100)}% מהכנסה. מומלץ מתחת ל-50%.`});
+    if(totalDebt>0)insights.push({t:'wrn',i:'🏦',ti:'ניהול חובות',b:`יתרת חוב: ${this.fc(totalDebt)}${inc?` (${Math.round(totalDebt/inc)} משכורות)`:''}.`});
+    if(totalOwed>0)insights.push({t:'inc',i:'💰',ti:'כסף שחייבים לך',b:`חייבים לך ${this.fc(totalOwed)} — זכור לגבות!`});
+    if(!inv.length)insights.push({t:'wrn',i:'📈',ti:'התחל להשקיע',b:`אין השקעות. ${inc?`אפילו ${this.fc(inc*.1)}/חודש בקרן מחקה יעשה הבדל.`:''}`});
+    if(tInv>0){const r=(tCur-tInv)/tInv*100;insights.push({t:r>=0?'inc':'exp',i:'📊',ti:'תיק השקעות',b:`תשואה: ${r>=0?'+':''}${r.toFixed(1)}% · שווי ${this.fc(tCur)}.`});}
+    if(!(this.state.savings||[]).find(s=>s.name.includes('חירום')))insights.push({t:'wrn',i:'🛡️',ti:'קרן חירום חסרה',b:`מומלץ ${inc?this.fc(inc*3)+'–'+this.fc(inc*6):'3-6 משכורות'} לכיסוי הוצאות בלתי צפויות.`});
+    document.getElementById('content').innerHTML=`
+      <h1 class="section-title gt" style="margin-bottom:6px">ניתוח AI פיננסי 🤖</h1>
+      <p class="section-sub">ניתוח מותאם אישית בהתבסס על הנתונים שלך</p>
+      <div class="grid2" style="margin-bottom:20px">
+        <div class="card" style="text-align:center;padding:32px">
+          <div class="label" style="margin-bottom:16px">ציון בריאות פיננסית</div>
+          <div style="width:140px;height:140px;border-radius:50%;border:8px solid ${sc[0]};display:flex;align-items:center;justify-content:center;margin:0 auto 16px;background:${sc[0]}18">
+            <div><div style="font-size:48px;font-weight:900;color:${sc[0]};line-height:1">${score}</div><div style="font-size:11px;color:var(--mu)">מתוך 100</div></div>
+          </div>
+          <div style="font-size:18px;font-weight:700;color:${sc[0]}">${sc[1]}</div>
+        </div>
+        <div class="card">
+          <div style="font-weight:700;font-size:15px;margin-bottom:14px">📊 סיכום החודש</div>
+          <div class="row" style="gap:10px;padding:10px 8px"><span style="color:var(--mu);flex:1">הכנסות</span><strong class="num-inc">${this.fc(inc)}</strong></div>
+          <div class="row" style="gap:10px;padding:10px 8px"><span style="color:var(--mu);flex:1">הוצאות</span><strong class="num-exp">${this.fc(exp)}</strong></div>
+          <div class="row" style="gap:10px;padding:10px 8px"><span style="color:var(--mu);flex:1">קבועות + תשלומים</span><strong style="color:var(--wrn)">${this.fc(fixed+instM)}</strong></div>
+          <div class="row" style="gap:10px;padding:10px 8px"><span style="color:var(--mu);flex:1">שיעור חיסכון</span><strong style="color:${savRate>=20?'var(--inc)':savRate>=10?'var(--wrn)':'var(--exp)'}">${savRate}%</strong></div>
+          <div class="row" style="gap:10px;padding:10px 8px;border-bottom:none"><span style="color:var(--mu);flex:1">שווי נטו</span><strong style="color:var(--pr)">${this.fc(this.netWorth())}</strong></div>
+        </div>
+      </div>
+      <div style="margin-bottom:20px">
+        <div style="font-weight:700;font-size:16px;margin-bottom:12px">💡 תובנות מותאמות אישית</div>
+        ${insights.map(ins=>`<div class="insight-card ${ins.t==='exp'?'insight-exp':ins.t==='wrn'?'insight-wrn':'insight-inc'}">
+          <span style="font-size:22px;flex-shrink:0">${ins.i}</span>
+          <div><div style="font-weight:700;font-size:14px;margin-bottom:3px">${ins.ti}</div><div style="font-size:13px;color:var(--txt2);line-height:1.6">${ins.b}</div></div>
+        </div>`).join('')}
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:16px;margin-bottom:12px">📚 טיפים פיננסיים</div>
+        <div style="display:grid;gap:8px">
+          ${[['📐','כלל 50/30/20: 50% לצרכים, 30% לרצונות, 20% לחיסכון'],['🔄','אוטומציה: העבר לחיסכון ביום המשכורת — לפני שתוציא'],['💳','פרע חוב בריבית גבוהה לפני שתחסוך — זאת התשואה הכי בטוחה'],['📊','השקעה פסיבית בקרנות מחקות עדיפה לרוב האנשים'],['🎯','הגדר יעד ספציפי: "לחסוך ₪50,000 עד דצמבר 2026"'],['🛡️','קרן חירום של 3-6 משכורות — ההגנה הפיננסית הראשונה']].map(([ic,t])=>`<div class="tip-card"><span style="font-size:20px;flex-shrink:0">${ic}</span><span style="font-size:13px;line-height:1.6;color:var(--txt2)">${t}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+}; // End of App object
+
+main();
+</script>
+</body>
+</html>
