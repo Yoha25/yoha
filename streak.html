@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>שומר הרצף</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Heebo',sans-serif}
+:root{
+  --bg:#0f0f1a;--bg2:#1a1a2e;--bg3:#16213e;
+  --card:#1a1a2e;--card2:#222244;
+  --accent:#7c3aed;--accent2:#a78bfa;--accent3:#c4b5fd;
+  --green:#10b981;--green2:#34d399;--greenbg:rgba(16,185,129,.1);
+  --red:#ef4444;--red2:#f87171;--redbg:rgba(239,68,68,.1);
+  --gold:#f59e0b;--goldbg:rgba(245,158,11,.1);
+  --txt:#e2e8f0;--txt2:#94a3b8;--txt3:#64748b;
+  --border:rgba(255,255,255,.06)
+}
+body{background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 50% 0%,rgba(124,58,237,.08) 0%,transparent 60%);pointer-events:none;z-index:0}
+
+.app{max-width:800px;margin:0 auto;padding:20px 16px 100px;position:relative;z-index:1}
+
+/* Header */
+.header{text-align:center;padding:30px 0 20px}
+.header h1{font-size:28px;font-weight:900;background:linear-gradient(135deg,var(--accent2),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.header p{color:var(--txt3);font-size:14px}
+
+/* Timer Card */
+.timer-card{background:linear-gradient(145deg,var(--card),var(--card2));border-radius:24px;padding:32px 20px;margin:20px 0;border:1px solid var(--border);position:relative;overflow:hidden}
+.timer-card::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:200px;height:1px;background:linear-gradient(90deg,transparent,var(--accent2),transparent)}
+.timer-card::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(124,58,237,.06),transparent 70%);pointer-events:none}
+
+.timer-label{text-align:center;font-size:13px;color:var(--txt3);margin-bottom:20px;font-weight:500;letter-spacing:1px}
+
+.timer-display{display:flex;justify-content:center;gap:8px;direction:ltr;flex-wrap:wrap}
+.timer-unit{text-align:center;min-width:70px}
+.timer-value{font-size:42px;font-weight:900;line-height:1;color:#fff;text-shadow:0 0 30px rgba(124,58,237,.3)}
+.timer-value.days{color:var(--accent2)}
+.timer-suffix{font-size:11px;color:var(--txt3);margin-top:6px;font-weight:500}
+.timer-sep{font-size:36px;font-weight:300;color:var(--txt3);align-self:flex-start;margin-top:2px}
+
+.streak-status{text-align:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+.streak-status .label{font-size:12px;color:var(--txt3);margin-bottom:4px}
+.streak-status .date{font-size:14px;color:var(--txt2);font-weight:500}
+
+/* Buttons */
+.btn-row{display:flex;gap:10px;margin:16px 0}
+.btn{flex:1;padding:14px;border-radius:14px;border:none;font-size:15px;font-weight:700;font-family:'Heebo',sans-serif;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.97)}
+.btn-fall{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;box-shadow:0 4px 20px rgba(239,68,68,.3)}
+.btn-fall:hover{box-shadow:0 6px 25px rgba(239,68,68,.4)}
+.btn-reset{background:var(--card2);color:var(--txt2);border:1px solid var(--border)}
+.btn-reset:hover{background:var(--card);border-color:rgba(255,255,255,.12)}
+
+/* Stats Grid */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}
+.stat-card{background:var(--card);border-radius:16px;padding:16px;text-align:center;border:1px solid var(--border)}
+.stat-icon{font-size:22px;margin-bottom:6px}
+.stat-value{font-size:22px;font-weight:800;color:#fff}
+.stat-label{font-size:11px;color:var(--txt3);margin-top:2px}
+.stat-card.best .stat-value{color:var(--gold)}
+.stat-card.current .stat-value{color:var(--green2)}
+.stat-card.falls .stat-value{color:var(--red2)}
+
+/* Milestones */
+.section-title{font-size:18px;font-weight:800;margin:28px 0 14px;display:flex;align-items:center;gap:8px}
+.section-title span{font-size:20px}
+
+.milestones-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.milestone{background:var(--card);border-radius:14px;padding:14px;border:1px solid var(--border);position:relative;overflow:hidden;transition:.2s}
+.milestone.achieved{border-color:rgba(16,185,129,.3);background:linear-gradient(145deg,var(--card),rgba(16,185,129,.05))}
+.milestone.achieved::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:60%;height:1px;background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.milestone.next{border-color:rgba(124,58,237,.3);background:linear-gradient(145deg,var(--card),rgba(124,58,237,.05));animation:pulse-border 2s infinite}
+@keyframes pulse-border{0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,.1)}50%{box-shadow:0 0 0 4px rgba(124,58,237,.08)}}
+
+.milestone-icon{font-size:24px;margin-bottom:6px}
+.milestone-days{font-size:16px;font-weight:800;color:#fff}
+.milestone-name{font-size:11px;color:var(--txt3);margin-top:2px}
+.milestone-check{position:absolute;top:10px;left:10px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px}
+.milestone.achieved .milestone-check{background:var(--greenbg);color:var(--green)}
+.milestone:not(.achieved) .milestone-check{background:rgba(255,255,255,.04);color:var(--txt3)}
+.milestone-progress{height:3px;border-radius:2px;background:rgba(255,255,255,.06);margin-top:10px;overflow:hidden}
+.milestone-progress-bar{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s}
+
+/* History */
+.history-list{display:flex;flex-direction:column;gap:8px}
+.history-item{background:var(--card);border-radius:14px;padding:14px 16px;border:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.history-rank{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.history-rank.gold{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#1a1a2e}
+.history-rank.silver{background:linear-gradient(135deg,#9ca3af,#d1d5db);color:#1a1a2e}
+.history-rank.bronze{background:linear-gradient(135deg,#d97706,#f59e0b);color:#1a1a2e}
+.history-rank.normal{background:var(--card2);color:var(--txt3)}
+.history-info{flex:1}
+.history-days{font-size:15px;font-weight:700}
+.history-dates{font-size:11px;color:var(--txt3);margin-top:2px}
+.history-badge{font-size:10px;padding:3px 8px;border-radius:6px;font-weight:600}
+.history-badge.best{background:var(--goldbg);color:var(--gold)}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.active{display:flex}
+.modal{background:var(--bg2);border-radius:20px;padding:28px;width:100%;max-width:400px;border:1px solid var(--border)}
+.modal h3{font-size:20px;font-weight:800;margin-bottom:6px}
+.modal p{font-size:13px;color:var(--txt3);margin-bottom:20px}
+.modal-btns{display:flex;gap:10px;margin-top:20px}
+.modal-btn{flex:1;padding:12px;border-radius:12px;border:none;font-size:14px;font-weight:700;font-family:'Heebo',sans-serif;cursor:pointer;transition:.2s}
+.modal-btn-cancel{background:var(--card2);color:var(--txt2)}
+.modal-btn-confirm{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff}
+.modal-btn-confirm:hover{box-shadow:0 4px 15px rgba(239,68,68,.3)}
+
+/* Achievement popup */
+.achievement-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:linear-gradient(145deg,var(--bg2),var(--card2));border-radius:24px;padding:36px;text-align:center;border:1px solid rgba(124,58,237,.3);z-index:200;transition:transform .4s cubic-bezier(.34,1.56,.64,1);max-width:340px;width:90%}
+.achievement-popup.active{transform:translate(-50%,-50%) scale(1)}
+.achievement-popup .icon{font-size:56px;margin-bottom:12px}
+.achievement-popup h3{font-size:22px;font-weight:900;background:linear-gradient(135deg,var(--gold),#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.achievement-popup p{font-size:14px;color:var(--txt2)}
+.achievement-popup .close-btn{margin-top:18px;padding:10px 28px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
+.achievement-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199;display:none}
+.achievement-bg.active{display:block}
+
+/* Confetti */
+.confetti{position:fixed;top:-10px;z-index:201;pointer-events:none;animation:fall 3s linear forwards}
+@keyframes fall{to{top:110vh;opacity:0}}
+
+/* Tabs */
+.tabs{display:flex;background:var(--card);border-radius:14px;padding:4px;margin:20px 0;border:1px solid var(--border)}
+.tab{flex:1;padding:10px;text-align:center;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;color:var(--txt3);transition:.2s}
+.tab.active{background:var(--accent);color:#fff}
+
+/* Responsive */
+@media(max-width:500px){
+  .timer-value{font-size:32px}
+  .timer-unit{min-width:56px}
+  .stats-grid{grid-template-columns:repeat(3,1fr);gap:8px}
+  .milestones-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--card2);border-radius:4px}
+
+/* Empty state */
+.empty-state{text-align:center;padding:40px 20px;color:var(--txt3)}
+.empty-state .icon{font-size:40px;margin-bottom:10px;opacity:.5}
+.empty-state p{font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Header -->
+  <div class="header">
+    <h1>🛡️ שומר הרצף</h1>
+    <p>המסע שלך להתחזקות אישית</p>
+  </div>
+
+  <!-- Timer -->
+  <div class="timer-card">
+    <div class="timer-label">⏱️ זמן ללא נפילה</div>
+    <div class="timer-display" id="timerDisplay">
+      <div class="timer-unit">
+        <div class="timer-value days" id="days">0</div>
+        <div class="timer-suffix">ימים</div>
+      </div>
+      <div class="timer-sep">:</div>
+      <div class="timer-unit">
+        <div class="timer-value" id="hours">00</div>
+        <div class="timer-suffix">שעות</div>
+      </div>
+      <div class="timer-sep">:</div>
+      <div class="timer-unit">
+        <div class="timer-value" id="minutes">00</div>
+        <div class="timer-suffix">דקות</div>
+      </div>
+      <div class="timer-sep">:</div>
+      <div class="timer-unit">
+        <div class="timer-value" id="seconds">00</div>
+        <div class="timer-suffix">שניות</div>
+      </div>
+    </div>
+    <div class="streak-status">
+      <div class="label">תחילת הרצף הנוכחי</div>
+      <div class="date" id="streakStartDate">טרם התחלת</div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="btn-row">
+    <button class="btn btn-fall" onclick="openFallModal()">😔 דיווח נפילה</button>
+    <button class="btn btn-reset" onclick="startNewStreak()">🔄 התחל רצף חדש</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card best">
+      <div class="stat-icon">🏆</div>
+      <div class="stat-value" id="bestStreak">0</div>
+      <div class="stat-label">שיא ימים</div>
+    </div>
+    <div class="stat-card current">
+      <div class="stat-icon">🔥</div>
+      <div class="stat-value" id="currentDays">0</div>
+      <div class="stat-label">רצף נוכחי</div>
+    </div>
+    <div class="stat-card falls">
+      <div class="stat-icon">📊</div>
+      <div class="stat-value" id="totalFalls">0</div>
+      <div class="stat-label">סה"כ נפילות</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('milestones',this)">🎯 מיילסטונים</div>
+    <div class="tab" onclick="switchTab('history',this)">📈 היסטוריה</div>
+  </div>
+
+  <!-- Milestones -->
+  <div id="milestonesTab">
+    <div class="milestones-grid" id="milestonesGrid"></div>
+  </div>
+
+  <!-- History -->
+  <div id="historyTab" style="display:none">
+    <div class="history-list" id="historyList"></div>
+  </div>
+</div>
+
+<!-- Fall Modal -->
+<div class="modal-overlay" id="fallModal">
+  <div class="modal">
+    <h3>😔 דיווח נפילה</h3>
+    <p>האם אתה בטוח שברצונך לדווח על נפילה? הרצף הנוכחי יישמר בהיסטוריה ותתחיל מחדש.</p>
+    <p style="color:var(--accent2);font-size:12px;margin-top:-12px">💡 זכור: כל נפילה היא הזדמנות לקום חזק יותר</p>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeFallModal()">ביטול</button>
+      <button class="modal-btn modal-btn-confirm" onclick="confirmFall()">אישור נפילה</button>
+    </div>
+  </div>
+</div>
+
+<!-- Achievement Popup -->
+<div class="achievement-bg" id="achieveBg" onclick="closeAchievement()"></div>
+<div class="achievement-popup" id="achievePopup">
+  <div class="icon" id="achieveIcon">🏆</div>
+  <h3 id="achieveTitle">מדהים!</h3>
+  <p id="achieveText">הגעת למיילסטון חדש!</p>
+  <button class="close-btn" onclick="closeAchievement()">המשך 💪</button>
+</div>
+
+<script>
+// ===================== DATA =====================
+const MILESTONES = [
+  { days:1, name:'יום ראשון', icon:'🌱', msg:'התחלת את המסע!' },
+  { days:3, name:'3 ימים', icon:'🌿', msg:'שלושה ימים של כוח!' },
+  { days:7, name:'שבוע', icon:'⭐', msg:'שבוע שלם! מדהים!' },
+  { days:14, name:'שבועיים', icon:'🌟', msg:'שבועיים של שליטה עצמית!' },
+  { days:30, name:'חודש', icon:'🔥', msg:'חודש שלם! אלוף!' },
+  { days:45, name:'45 יום', icon:'💎', msg:'45 ימים של גבורה!' },
+  { days:60, name:'60 יום', icon:'🏅', msg:'חודשיים! אתה מכונה!' },
+  { days:90, name:'90 יום', icon:'🏆', msg:'רבעון! הישג אדיר!' },
+  { days:120, name:'120 יום', icon:'👑', msg:'4 חודשים! מלך!' },
+  { days:150, name:'150 יום', icon:'🦁', msg:'5 חודשים! אריה!' },
+  { days:200, name:'200 יום', icon:'🚀', msg:'200 ימים! בלתי ניתן לעצירה!' },
+  { days:250, name:'250 יום', icon:'💫', msg:'250 ימים! כוכב!' },
+  { days:300, name:'300 יום', icon:'🌈', msg:'300 ימים! כמעט שנה!' },
+  { days:365, name:'שנה!', icon:'🎊', msg:'שנה שלמה! אגדה חיה!' }
+];
+
+function getDefaultData(){
+  return {
+    currentStreakStart: null,
+    history: [],
+    totalFalls: 0,
+    achievedMilestones: []
+  };
+}
+
+function loadData(){
+  try{
+    const d = JSON.parse(localStorage.getItem('streakData'));
+    if(d) return d;
+  }catch(e){}
+  return getDefaultData();
+}
+
+function saveData(d){
+  localStorage.setItem('streakData', JSON.stringify(d));
+}
+
+let data = loadData();
+let timerInterval;
+let lastCheckedMilestone = 0;
+
+// ===================== TIMER =====================
+function updateTimer(){
+  if(!data.currentStreakStart){
+    document.getElementById('days').textContent = '0';
+    document.getElementById('hours').textContent = '00';
+    document.getElementById('minutes').textContent = '00';
+    document.getElementById('seconds').textContent = '00';
+    document.getElementById('currentDays').textContent = '0';
+    return;
+  }
+
+  const now = Date.now();
+  const start = new Date(data.currentStreakStart).getTime();
+  let diff = Math.max(0, now - start);
+
+  const totalSec = Math.floor(diff / 1000);
+  const d = Math.floor(totalSec / 86400);
+  const h = Math.floor((totalSec % 86400) / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+
+  document.getElementById('days').textContent = d;
+  document.getElementById('hours').textContent = String(h).padStart(2,'0');
+  document.getElementById('minutes').textContent = String(m).padStart(2,'0');
+  document.getElementById('seconds').textContent = String(s).padStart(2,'0');
+  document.getElementById('currentDays').textContent = d;
+
+  // Check milestones
+  if(d > lastCheckedMilestone){
+    lastCheckedMilestone = d;
+    checkMilestones(d);
+  }
+}
+
+function startTimer(){
+  if(timerInterval) clearInterval(timerInterval);
+  updateTimer();
+  timerInterval = setInterval(updateTimer, 1000);
+}
+
+// ===================== MILESTONES =====================
+function checkMilestones(currentDays){
+  MILESTONES.forEach(m => {
+    if(currentDays >= m.days && !data.achievedMilestones.includes(m.days)){
+      data.achievedMilestones.push(m.days);
+      saveData(data);
+      showAchievement(m);
+      renderMilestones();
+    }
+  });
+}
+
+function renderMilestones(){
+  const grid = document.getElementById('milestonesGrid');
+  const currentDays = getCurrentDays();
+
+  let nextFound = false;
+  grid.innerHTML = MILESTONES.map(m => {
+    const achieved = data.achievedMilestones.includes(m.days);
+    const progress = Math.min(100, (currentDays / m.days) * 100);
+    let cls = '';
+    if(achieved) cls = 'achieved';
+    else if(!nextFound){ cls = 'next'; nextFound = true; }
+
+    return `<div class="milestone ${cls}">
+      <div class="milestone-check">${achieved ? '✓' : m.days}</div>
+      <div class="milestone-icon">${m.icon}</div>
+      <div class="milestone-days">${m.name}</div>
+      <div class="milestone-name">${m.days} ${m.days===1?'יום':'ימים'}</div>
+      ${!achieved ? `<div class="milestone-progress"><div class="milestone-progress-bar" style="width:${progress}%"></div></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function getCurrentDays(){
+  if(!data.currentStreakStart) return 0;
+  return Math.floor((Date.now() - new Date(data.currentStreakStart).getTime()) / 86400000);
+}
+
+// ===================== HISTORY =====================
+function renderHistory(){
+  const list = document.getElementById('historyList');
+  if(!data.history.length){
+    list.innerHTML = `<div class="empty-state"><div class="icon">📜</div><p>אין היסטוריה עדיין<br>התחל את הרצף הראשון שלך!</p></div>`;
+    return;
+  }
+
+  const sorted = [...data.history].sort((a,b) => b.days - a.days);
+  const best = sorted[0]?.days || 0;
+
+  list.innerHTML = sorted.map((item, i) => {
+    const rankCls = i===0?'gold':i===1?'silver':i===2?'bronze':'normal';
+    const startD = new Date(item.start).toLocaleDateString('he-IL');
+    const endD = new Date(item.end).toLocaleDateString('he-IL');
+    return `<div class="history-item">
+      <div class="history-rank ${rankCls}">${i+1}</div>
+      <div class="history-info">
+        <div class="history-days">${item.days} ימים</div>
+        <div class="history-dates">${startD} — ${endD}</div>
+      </div>
+      ${item.days === best ? '<div class="history-badge best">🏆 שיא</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function updateStats(){
+  const best = data.history.reduce((max, h) => Math.max(max, h.days), 0);
+  const currentDays = getCurrentDays();
+  document.getElementById('bestStreak').textContent = Math.max(best, currentDays);
+  document.getElementById('totalFalls').textContent = data.totalFalls;
+}
+
+// ===================== ACTIONS =====================
+function startNewStreak(){
+  if(data.currentStreakStart){
+    // Already has an active streak — just confirm
+    if(!confirm('יש לך רצף פעיל. האם להתחיל מחדש?')) return;
+    // Save current streak to history
+    const days = getCurrentDays();
+    if(days > 0){
+      data.history.push({
+        start: data.currentStreakStart,
+        end: new Date().toISOString(),
+        days
+      });
+    }
+  }
+  data.currentStreakStart = new Date().toISOString();
+  data.achievedMilestones = [];
+  lastCheckedMilestone = 0;
+  saveData(data);
+  renderAll();
+  startTimer();
+}
+
+function openFallModal(){
+  if(!data.currentStreakStart){
+    alert('אין רצף פעיל כרגע. לחץ על "התחל רצף חדש" כדי להתחיל.');
+    return;
+  }
+  document.getElementById('fallModal').classList.add('active');
+}
+
+function closeFallModal(){
+  document.getElementById('fallModal').classList.remove('active');
+}
+
+function confirmFall(){
+  closeFallModal();
+
+  const days = getCurrentDays();
+  data.history.push({
+    start: data.currentStreakStart,
+    end: new Date().toISOString(),
+    days
+  });
+  data.totalFalls++;
+  data.currentStreakStart = new Date().toISOString();
+  data.achievedMilestones = [];
+  lastCheckedMilestone = 0;
+  saveData(data);
+  renderAll();
+  startTimer();
+}
+
+// ===================== ACHIEVEMENTS =====================
+function showAchievement(milestone){
+  document.getElementById('achieveIcon').textContent = milestone.icon;
+  document.getElementById('achieveTitle').textContent = `${milestone.name}!`;
+  document.getElementById('achieveText').textContent = milestone.msg;
+  document.getElementById('achievePopup').classList.add('active');
+  document.getElementById('achieveBg').classList.add('active');
+  spawnConfetti();
+}
+
+function closeAchievement(){
+  document.getElementById('achievePopup').classList.remove('active');
+  document.getElementById('achieveBg').classList.remove('active');
+}
+
+function spawnConfetti(){
+  const colors = ['#7c3aed','#a78bfa','#f59e0b','#10b981','#ef4444','#3b82f6','#ec4899'];
+  for(let i=0;i<30;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.style.cssText = `left:${Math.random()*100}vw;width:${6+Math.random()*6}px;height:${6+Math.random()*6}px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>.5?'50%':'2px'};animation-delay:${Math.random()*1.5}s;animation-duration:${2+Math.random()*2}s`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 5000);
+  }
+}
+
+// ===================== TABS =====================
+function switchTab(tab, el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('milestonesTab').style.display = tab==='milestones'?'':'none';
+  document.getElementById('historyTab').style.display = tab==='history'?'':'none';
+}
+
+// ===================== RENDER =====================
+function renderAll(){
+  updateTimer();
+  renderMilestones();
+  renderHistory();
+  updateStats();
+
+  if(data.currentStreakStart){
+    const d = new Date(data.currentStreakStart);
+    document.getElementById('streakStartDate').textContent = d.toLocaleDateString('he-IL',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) + ' ' + d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+  } else {
+    document.getElementById('streakStartDate').textContent = 'טרם התחלת — לחץ "התחל רצף חדש"';
+  }
+}
+
+// ===================== INIT =====================
+renderAll();
+startTimer();
+</script>
+
+</body>
+</html>
