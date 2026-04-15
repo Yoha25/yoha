@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PS5 Raffle - דמו</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Heebo',sans-serif}
+:root{
+  --bg:#0a0a15;--bg2:#12122a;
+  --card:#1a1a2e;--card2:#222244;
+  --accent:#7c3aed;--accent2:#a78bfa;--accent3:#c4b5fd;
+  --green:#10b981;--green2:#34d399;
+  --red:#ef4444;--red2:#f87171;
+  --gold:#f59e0b;--gold2:#fbbf24;
+  --txt:#e2e8f0;--txt2:#94a3b8;--txt3:#64748b;
+  --border:rgba(255,255,255,.08)
+}
+body{background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(124,58,237,.12) 0%,transparent 60%);pointer-events:none;z-index:0}
+
+.app{max-width:900px;margin:0 auto;padding:20px 16px 80px;position:relative;z-index:1}
+
+/* Disclaimer */
+.disclaimer{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:16px;padding:16px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start}
+.disclaimer .icon{font-size:24px;flex-shrink:0}
+.disclaimer .content{flex:1}
+.disclaimer .title{color:var(--red2);font-weight:800;font-size:14px;margin-bottom:4px}
+.disclaimer .text{color:var(--txt2);font-size:13px;line-height:1.5}
+
+/* Header */
+.header{text-align:center;padding:20px 0 30px}
+.header h1{font-size:32px;font-weight:900;background:linear-gradient(135deg,var(--accent2),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.header p{color:var(--txt3);font-size:14px}
+
+/* Product Card */
+.product{background:linear-gradient(145deg,var(--card),var(--card2));border-radius:24px;padding:28px 24px;border:1px solid var(--border);margin-bottom:20px;position:relative;overflow:hidden}
+.product::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:60%;height:1px;background:linear-gradient(90deg,transparent,var(--accent2),transparent)}
+.product-layout{display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+.product-img{flex:0 0 140px;height:140px;background:radial-gradient(circle,rgba(124,58,237,.2),rgba(124,58,237,.05));border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:72px;border:1px solid var(--border)}
+.product-info{flex:1;min-width:200px}
+.product-name{font-size:22px;font-weight:800;margin-bottom:6px}
+.product-desc{color:var(--txt3);font-size:13px;margin-bottom:16px}
+.product-prices{display:flex;gap:20px;flex-wrap:wrap}
+.price-item .label{font-size:11px;color:var(--txt3);margin-bottom:4px;font-weight:500;letter-spacing:.5px}
+.price-item .value{font-size:18px;font-weight:800}
+.price-item .value.market{color:var(--txt2);text-decoration:line-through}
+.price-item .value.ticket{color:var(--gold2)}
+
+/* Stats Grid */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:linear-gradient(145deg,var(--card),var(--card2));border-radius:16px;padding:18px 16px;border:1px solid var(--border);text-align:center}
+.stat-label{font-size:11px;color:var(--txt3);font-weight:600;letter-spacing:.5px;margin-bottom:8px}
+.stat-value{font-size:24px;font-weight:900;color:#fff}
+.stat-value.pot{color:var(--green2)}
+.stat-value.profit{color:var(--gold2)}
+.stat-value.profit.negative{color:var(--red2)}
+.stat-sub{font-size:11px;color:var(--txt3);margin-top:4px}
+
+/* Progress */
+.progress-card{background:linear-gradient(145deg,var(--card),var(--card2));border-radius:20px;padding:22px 20px;border:1px solid var(--border);margin-bottom:20px}
+.progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.progress-title{font-size:14px;font-weight:700;color:var(--txt2)}
+.progress-nums{font-size:13px;color:var(--txt3)}
+.progress-nums b{color:var(--accent2);font-weight:800}
+.progress-bar{height:12px;background:rgba(255,255,255,.05);border-radius:999px;overflow:hidden;position:relative}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;transition:width .5s ease;position:relative;overflow:hidden}
+.progress-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);animation:shimmer 2s infinite}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.progress-milestones{display:flex;justify-content:space-between;margin-top:10px;font-size:11px;color:var(--txt3)}
+.milestone.active{color:var(--green2);font-weight:700}
+
+/* Actions */
+.actions{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.btn{flex:1;min-width:140px;padding:16px;border-radius:14px;border:none;font-size:15px;font-weight:700;font-family:'Heebo',sans-serif;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 20px rgba(124,58,237,.3)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(124,58,237,.4)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-secondary{background:var(--card2);color:var(--txt);border:1px solid var(--border)}
+.btn-secondary:hover{background:#2a2a4a}
+.btn-success{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff}
+.btn-danger{background:var(--card2);color:var(--red2);border:1px solid rgba(239,68,68,.2)}
+
+/* Participants */
+.participants-card{background:linear-gradient(145deg,var(--card),var(--card2));border-radius:20px;padding:22px 20px;border:1px solid var(--border);margin-bottom:20px}
+.card-title{font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.card-title .count{background:rgba(124,58,237,.15);color:var(--accent2);padding:3px 10px;border-radius:999px;font-size:12px}
+.participants-list{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.participants-list::-webkit-scrollbar{width:6px}
+.participants-list::-webkit-scrollbar-thumb{background:var(--card2);border-radius:3px}
+.participant{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.02);border-radius:10px;border:1px solid var(--border);animation:slideIn .3s}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.participant .num{width:28px;height:28px;background:var(--card2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--txt3)}
+.participant .name{flex:1;font-size:14px;font-weight:500}
+.participant .ticket{font-size:11px;color:var(--accent2);background:rgba(124,58,237,.1);padding:3px 8px;border-radius:6px;font-family:monospace}
+.empty-list{text-align:center;padding:30px;color:var(--txt3);font-size:13px}
+
+/* Draw Modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal.active{display:flex}
+.modal-content{background:linear-gradient(145deg,var(--card),var(--card2));border-radius:24px;padding:36px 28px;max-width:420px;width:100%;text-align:center;border:1px solid var(--border);animation:popIn .4s}
+@keyframes popIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+.draw-title{font-size:20px;font-weight:800;margin-bottom:8px}
+.draw-sub{color:var(--txt3);font-size:13px;margin-bottom:24px}
+.draw-display{background:rgba(0,0,0,.3);border-radius:16px;padding:30px 20px;margin-bottom:20px;border:1px solid var(--border);min-height:120px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px}
+.draw-name{font-size:28px;font-weight:900;color:var(--gold2);text-shadow:0 0 20px rgba(245,158,11,.4)}
+.draw-ticket{font-family:monospace;color:var(--accent2);font-size:14px}
+.spinning{animation:spin .05s infinite}
+@keyframes spin{0%{opacity:.5}50%{opacity:1}100%{opacity:.5}}
+.confetti{font-size:32px;margin-bottom:8px}
+
+/* Summary */
+.summary{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:14px;padding:16px;margin-top:16px;font-size:13px;text-align:right}
+.summary-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.summary-row:last-child{border-bottom:none;font-weight:800;color:var(--green2);margin-top:4px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1)}
+
+/* Config */
+.config{background:linear-gradient(145deg,var(--card),var(--card2));border-radius:20px;padding:22px 20px;border:1px solid var(--border);margin-bottom:20px}
+.config-row{display:flex;gap:12px;flex-wrap:wrap}
+.config-item{flex:1;min-width:120px}
+.config-item label{display:block;font-size:11px;color:var(--txt3);font-weight:600;margin-bottom:6px;letter-spacing:.5px}
+.config-item input{width:100%;padding:10px 12px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:10px;color:var(--txt);font-size:14px;font-family:'Heebo',sans-serif}
+.config-item input:focus{outline:none;border-color:var(--accent2)}
+
+@media(max-width:500px){
+  .product-layout{flex-direction:column;text-align:center}
+  .product-prices{justify-content:center}
+  .stat-value{font-size:20px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Disclaimer -->
+  <div class="disclaimer">
+    <div class="icon">⚠️</div>
+    <div class="content">
+      <div class="title">דמו לצורכי למידה בלבד</div>
+      <div class="text">הגרלות פרטיות אסורות בישראל לפי חוק העונשין. הדמו הזה נועד להמחשת הרעיון וללימוד קוד בלבד ואינו מיועד לשימוש אמיתי.</div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <h1>🎮 PS5 Raffle Demo</h1>
+    <p>סימולטור הגרלת פלייסטיישן 5</p>
+  </div>
+
+  <!-- Config -->
+  <div class="config">
+    <div class="card-title">⚙️ הגדרות הגרלה</div>
+    <div class="config-row">
+      <div class="config-item">
+        <label>שווי שוק (₪)</label>
+        <input type="number" id="marketPrice" value="1000" min="1">
+      </div>
+      <div class="config-item">
+        <label>מחיר כרטיס (₪)</label>
+        <input type="number" id="ticketPrice" value="10" min="1">
+      </div>
+      <div class="config-item">
+        <label>יעד כרטיסים</label>
+        <input type="number" id="targetTickets" value="150" min="1">
+      </div>
+    </div>
+  </div>
+
+  <!-- Product -->
+  <div class="product">
+    <div class="product-layout">
+      <div class="product-img">🎮</div>
+      <div class="product-info">
+        <div class="product-name">PlayStation 5</div>
+        <div class="product-desc">קונסולה במצב מעולה · יד 2</div>
+        <div class="product-prices">
+          <div class="price-item">
+            <div class="label">שווי שוק</div>
+            <div class="value market" id="dispMarket">1,000 ₪</div>
+          </div>
+          <div class="price-item">
+            <div class="label">מחיר כרטיס</div>
+            <div class="value ticket" id="dispTicket">10 ₪</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">כרטיסים נמכרו</div>
+      <div class="stat-value" id="soldCount">0</div>
+      <div class="stat-sub" id="soldSub">מתוך 150</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">קופה</div>
+      <div class="stat-value pot" id="potValue">0 ₪</div>
+      <div class="stat-sub">סה"כ הכנסות</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">רווח צפוי</div>
+      <div class="stat-value profit negative" id="profitValue">-1,000 ₪</div>
+      <div class="stat-sub">קופה - שווי שוק</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">סיכוי לזכייה</div>
+      <div class="stat-value" id="oddsValue">—</div>
+      <div class="stat-sub">לכל כרטיס</div>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-card">
+    <div class="progress-header">
+      <div class="progress-title">התקדמות ליעד</div>
+      <div class="progress-nums"><b id="progPercent">0%</b></div>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progFill" style="width:0%"></div>
+    </div>
+    <div class="progress-milestones">
+      <span class="milestone" id="ms0">0</span>
+      <span class="milestone" id="ms1">נקודת איזון</span>
+      <span class="milestone" id="ms2">יעד</span>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button class="btn btn-primary" id="buyBtn">🎫 קנה כרטיס</button>
+    <button class="btn btn-secondary" id="simBtn">⚡ סימולציה (10)</button>
+    <button class="btn btn-success" id="drawBtn" disabled>🎲 הגרל זוכה</button>
+    <button class="btn btn-danger" id="resetBtn">🔄 איפוס</button>
+  </div>
+
+  <!-- Participants -->
+  <div class="participants-card">
+    <div class="card-title">
+      <span>👥 משתתפים</span>
+      <span class="count" id="partCount">0</span>
+    </div>
+    <div class="participants-list" id="partList">
+      <div class="empty-list">עדיין אין משתתפים — קנה כרטיס ראשון!</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Draw Modal -->
+<div class="modal" id="drawModal">
+  <div class="modal-content">
+    <div class="confetti">🎉</div>
+    <div class="draw-title">מגרילים זוכה...</div>
+    <div class="draw-sub" id="drawSub">מתוך <b id="drawTotal">0</b> כרטיסים</div>
+    <div class="draw-display">
+      <div class="draw-name" id="drawName">...</div>
+      <div class="draw-ticket" id="drawTicket"></div>
+    </div>
+    <div id="drawSummary"></div>
+    <button class="btn btn-primary" id="closeModalBtn" style="margin-top:16px">סגור</button>
+  </div>
+</div>
+
+<script>
+const state = {
+  participants: [],
+  drawn: false,
+};
+
+const NAMES = ['דניאל','נועה','יוסי','שירה','אבי','תמר','רון','מיכל','עומר','גל','איתי','ליאור','מאיה','אורי','נטע','רועי','הילה','טל','עדי','יונתן','דנה','אסף','שני','עידן','מור','ניר','רוני','יעל','אלון','אביב'];
+
+const $ = id => document.getElementById(id);
+
+const fmt = n => n.toLocaleString('he-IL');
+
+function getConfig(){
+  return {
+    market: parseInt($('marketPrice').value) || 1000,
+    ticket: parseInt($('ticketPrice').value) || 10,
+    target: parseInt($('targetTickets').value) || 150,
+  };
+}
+
+function randomName(){
+  const base = NAMES[Math.floor(Math.random() * NAMES.length)];
+  return base + ' ' + String.fromCharCode(65 + Math.floor(Math.random() * 26)) + '.';
+}
+
+function genTicketId(){
+  return '#' + Math.random().toString(36).substr(2, 6).toUpperCase();
+}
+
+function addParticipant(){
+  if(state.drawn) return;
+  state.participants.push({
+    name: randomName(),
+    ticket: genTicketId(),
+  });
+  render();
+}
+
+function simulate(n){
+  if(state.drawn) return;
+  for(let i = 0; i < n; i++) addParticipant();
+}
+
+function reset(){
+  state.participants = [];
+  state.drawn = false;
+  $('buyBtn').disabled = false;
+  $('simBtn').disabled = false;
+  render();
+}
+
+function render(){
+  const cfg = getConfig();
+  const count = state.participants.length;
+  const pot = count * cfg.ticket;
+  const profit = pot - cfg.market;
+  const breakeven = Math.ceil(cfg.market / cfg.ticket);
+  const odds = count > 0 ? (100 / count).toFixed(2) + '%' : '—';
+
+  $('dispMarket').textContent = fmt(cfg.market) + ' ₪';
+  $('dispTicket').textContent = fmt(cfg.ticket) + ' ₪';
+
+  $('soldCount').textContent = count;
+  $('soldSub').textContent = 'מתוך ' + cfg.target;
+  $('potValue').textContent = fmt(pot) + ' ₪';
+  $('profitValue').textContent = (profit >= 0 ? '+' : '') + fmt(profit) + ' ₪';
+  $('profitValue').classList.toggle('negative', profit < 0);
+  $('oddsValue').textContent = odds;
+
+  const pct = Math.min(100, (count / cfg.target) * 100);
+  $('progFill').style.width = pct + '%';
+  $('progPercent').textContent = Math.floor(pct) + '%';
+  $('ms1').textContent = 'נקודת איזון (' + breakeven + ')';
+  $('ms2').textContent = 'יעד (' + cfg.target + ')';
+  $('ms1').classList.toggle('active', count >= breakeven);
+  $('ms2').classList.toggle('active', count >= cfg.target);
+
+  $('partCount').textContent = count;
+  const list = $('partList');
+  if(count === 0){
+    list.innerHTML = '<div class="empty-list">עדיין אין משתתפים — קנה כרטיס ראשון!</div>';
+  } else {
+    list.innerHTML = state.participants.slice().reverse().map((p, i) => {
+      const realIdx = count - i;
+      return `<div class="participant">
+        <div class="num">${realIdx}</div>
+        <div class="name">${p.name}</div>
+        <div class="ticket">${p.ticket}</div>
+      </div>`;
+    }).join('');
+  }
+
+  $('drawBtn').disabled = count < 2 || state.drawn;
+}
+
+function draw(){
+  const count = state.participants.length;
+  if(count < 2) return;
+
+  const cfg = getConfig();
+  const pot = count * cfg.ticket;
+  const profit = pot - cfg.market;
+
+  $('drawTotal').textContent = count;
+  $('drawModal').classList.add('active');
+  $('drawSummary').innerHTML = '';
+  $('drawName').textContent = '...';
+  $('drawTicket').textContent = '';
+  $('drawName').classList.add('spinning');
+
+  let ticks = 0;
+  const maxTicks = 30;
+  const spin = setInterval(() => {
+    const rand = state.participants[Math.floor(Math.random() * count)];
+    $('drawName').textContent = rand.name;
+    $('drawTicket').textContent = rand.ticket;
+    ticks++;
+    if(ticks >= maxTicks){
+      clearInterval(spin);
+      const winner = state.participants[Math.floor(Math.random() * count)];
+      $('drawName').textContent = winner.name;
+      $('drawTicket').textContent = '🎫 ' + winner.ticket;
+      $('drawName').classList.remove('spinning');
+
+      $('drawSummary').innerHTML = `
+        <div class="summary">
+          <div class="summary-row"><span>כרטיסים נמכרו</span><b>${count}</b></div>
+          <div class="summary-row"><span>סך הקופה</span><b>${fmt(pot)} ₪</b></div>
+          <div class="summary-row"><span>שווי PS5</span><b>${fmt(cfg.market)} ₪</b></div>
+          <div class="summary-row"><span>רווח מוכר</span><b>${(profit>=0?'+':'') + fmt(profit)} ₪</b></div>
+        </div>
+      `;
+
+      state.drawn = true;
+      $('buyBtn').disabled = true;
+      $('simBtn').disabled = true;
+      render();
+    }
+  }, 80);
+}
+
+$('buyBtn').addEventListener('click', addParticipant);
+$('simBtn').addEventListener('click', () => simulate(10));
+$('drawBtn').addEventListener('click', draw);
+$('resetBtn').addEventListener('click', reset);
+$('closeModalBtn').addEventListener('click', () => $('drawModal').classList.remove('active'));
+['marketPrice','ticketPrice','targetTickets'].forEach(id => {
+  $(id).addEventListener('input', render);
+});
+
+render();
+</script>
+</body>
+</html>
